@@ -1,0 +1,15 @@
+{
+  "name": "node_db",
+  "version": "1.0.0",
+  "description": "test for accessing cassandra data",
+  "main": "db.js",
+  "dependencies": {
+    "cassandra-driver": "^4.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
