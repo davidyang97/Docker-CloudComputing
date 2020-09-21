@@ -3,6 +3,8 @@ Nodejs db test
 Create a nodejs container, access data from cassandra container
 ### Guidance
 - Run cassandra container
+- Go to Docker-CloudComputing/db/db_test
+- Run `npm install`
 - Build image of nodejs
 ```
 	docker build -t david/node-db-app
