@@ -3,12 +3,6 @@ var express = require('express');
 var app = express();
 
 app.get("/cassandra/v1", function(req, res) {
-  if(req.query.keyspace == null) {
-      console.log("Parameter Error! Missing 'keyspace'!");
-      res.send("Parameter Error! Missing 'keyspace'!");
-      return;
-  }
-
   if(req.query.id == null) {
     console.log("Parameter Error! Missing 'id'!");
     res.send("Parameter Error! Missing 'id'!");
@@ -18,7 +12,7 @@ app.get("/cassandra/v1", function(req, res) {
   const client = new cassandra.Client({
     contactPoints: ['10.176.67.88:9042'],
     localDataCenter: 'datacenter1',
-    keyspace: req.query.keyspace
+    keyspace: 'pimin_net'
   });
 
   const query = 'select * from users where id = ?';
@@ -26,8 +20,12 @@ app.get("/cassandra/v1", function(req, res) {
 
   client.execute(query, param, { prepare: true })
   .then(function(result) {
-    console.log('Result: ', result);
-    res.send(result);
-  }  
+    console.log('Result: ', result.rows);
+    res.send(result.rows);
+  })  
+})
+
+app.listen(8081, function(){
+    console.log("address is localhost:8081");
 })
  

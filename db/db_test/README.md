@@ -7,11 +7,13 @@ Create a nodejs container, access data from cassandra container
 - Run `npm install`
 - Build image of nodejs
 ```
-	docker build -t david/node-db-app
+	docker build -t david/node-db-app .
 ```
 - Run image and gets the result
 ```
-	docker run -it --network host david/node-db-app
+	docker run -d --network host david/node-db-app
 ```
-## Remaining Problems
-- after retrieving the data, the bash interface doesn't exit, even if using Ctrl + C
+- Use curl command to test
+```
+	curl localhost:8081/cassandra/v1?id=1
+```
