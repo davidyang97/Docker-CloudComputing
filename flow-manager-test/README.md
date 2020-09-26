@@ -17,7 +17,7 @@ The test workflow I used here includes 3 components:
 * A 'flower-svm' component
 * A cassandra db component
 
-All three components are on Docker Hub, if by chance you want to build the workflow-manager image locally and experiment with it.
+All three components are on Docker Hub, if by chance you want to build the flow-manager image locally and experiment with it.
 
 ---
 
