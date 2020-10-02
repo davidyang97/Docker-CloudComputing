@@ -11,9 +11,14 @@ Create a nodejs container, access data from cassandra container
 ```
 - Run image and gets the result
 ```
-	docker run -d --network host david/node-db-app
+	docker run -d --network cassandra-net -p 8090:8090 david/node-db-app
 ```
-- Use curl command to test
+- Use curl command to insert and retrieve data
 ```
-	curl localhost:8081/cassandra/v1?id=1
+	curl -X POST -H "Content-Type: application/json" \
+    	-d '{"id": "9", "user_name": "Janet"}' \
+	localhost:8090/cassandra/v1
+```
+```
+	curl localhost:8090/cassandra/v1?id=9
 ```
