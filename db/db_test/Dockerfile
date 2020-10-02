@@ -7,5 +7,5 @@ RUN npm install
 # Bundle app source
 COPY . .
 # replace this with your application's default port
-EXPOSE 8081
+EXPOSE 8090
 CMD [ "node", "db.js" ]
