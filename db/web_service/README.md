@@ -1,20 +1,20 @@
-### Description
+## Description
 
-Nodejs web service
+Nodejs Web Service
 
-Create a nodejs container, access data from cassandra container
+- Create a nodejs container to access data in cassandra container
 
-API document see https://davidyang97.stoplight.io/docs/dockercloudcomputing/reference/ParkingLot.v1.yaml
+- API document see https://davidyang97.stoplight.io/docs/dockercloudcomputing/reference/ParkingLot.v1.yaml
 
-Finished [GET, POST, DELETE] of /parkingInfo
+- Finished API:
+	- [GET, POST, DELETE] /parkingInfo
 ***
-### Guidance
+## Guidance
 - Run cassandra container
 ```
 	docker run -d -v parking-lot:/var/lib/cassandra --network cassandra-net  -p 7000:7000 -p 9042:9042 --name parking-lot-db cassandra:latest
 ```
 - Go to Docker-CloudComputing/db/web_service
-- Run `npm install`
 - Build image of nodejs
 ```
 	docker build -t david/web-service .
@@ -24,8 +24,8 @@ Finished [GET, POST, DELETE] of /parkingInfo
 	docker run -d --network cassandra-net -p 8090:8090 --name web-service david/web-service
 ```
 ***
-### Sample Test
-- Warning: should change the licensenumber because someone may have tested and added to db
+## Sample Test
+- **Warning:** should change the licensenumber because someone may have tested and added to db
 - Retrieve the snapshot of parking lot
 ```
 	curl localhost:8090/parkingInfo
