@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-const client = new cassandra.Client({
+var client = new cassandra.Client({
   contactPoints: ['parking-lot-db'],
   localDataCenter: 'datacenter1',
   keyspace: 'parkinglot'
@@ -26,7 +26,11 @@ typeMapping['motorcycle'] = 'blue';
 
 var price = 2;
 
-var running = true;
+var running = false;
+
+var retry = 20;
+
+var retryInterval = 5;
 
 app.get("/parkingInfo", function(req, res) {
   if(!running) {
@@ -136,20 +140,42 @@ app.delete("/parkingInfo", function(req, res){
 
 })
 
+function retryConnect() {	
+	client.connect()
+	//client.execute('SELECT cql_version FROM system.local;', [])
+      	.then(function() {
+		console.log("DB connection succeeded");
+		running = true;
+		
+      	})
+	.catch(function(err){
+		client = new cassandra.Client({
+  			contactPoints: ['parking-lot-db'],
+			localDataCenter: 'datacenter1',
+  			keyspace: 'parkinglot'
+		});
+		//console.error(err);
+		console.log("DB connection failed");
+		retry--;
+		//client.shutdown();
+                setTimeout(function() {
+			if(retry > 0) retryConnect();
+			else {
+				console.log("DB connection failed for too many times");
+				console.log("Process exit");
+				process.exit();
+			}
+          	}, (retryInterval * 1000));
+	});
+	
+}
+
 app.listen(8090, function(){
     console.log("address is localhost:8090");
-   // do {
-      client.execute('SELECT now() FROM system.local;', [], function(result) {
-          if(result) {
-            running = true;
-            console.log(result);
-          }
-         /* else {
-            setTimeout(function() {
-              ;
-          }, (1000));
-        }*/
-      });
-    //}while(!running);*/
+    process.on('SIGINT', function() {
+	console.log("Caught interrupt signal");
+        process.exit();
+    });
+    retryConnect();
 })
  
