@@ -124,7 +124,7 @@ def entry():
 
 	# Send image to vtype recognizer
 	# TODO: update img file name
-	files={'file':(img,open(img,'rb'))}
+	files={'file':open(img,'rb')}
 	vtype = requests.post('http://plate-recognizer:8080/image-file',files=files).json()['type']
 
 	# Add vehicle to DB
