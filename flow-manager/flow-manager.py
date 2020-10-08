@@ -68,8 +68,8 @@ def start():
 	if 'vtype-recognizer' in existing_services:
 		vtype_recognizer = client.services.get(existing_services['vtype-recognizer'])
 	else:
-		vtype_recognizer = client.services.create('<DOCKER HUB IMAGE REPO>', name='vtype-recognizer',
-			networks=['parking-lot-net'])
+		vtype_recognizer = client.services.create('emwoj/detectron2:latest', name='vtype-recognizer',
+			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8080:5000}))
 	service_list.append(vtype_recognizer)
 
 
@@ -95,7 +95,7 @@ def start():
 		ready = True
 		if not requests.get('http://plate-recognizer:<PORT>/is-alive').json()['alive']:
 			ready = False
-		if not requests.get('http://vtype-recognizer:<PORT>/is-alive').json()['alive']:
+		if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
 			ready = False
 		if not requests.get('http://display-creator:5000/is-alive').json()['alive']:
 			ready = False
@@ -123,7 +123,9 @@ def entry():
 
 
 	# Send image to vtype recognizer
-
+	# TODO: update img file name
+	files={'file':(img,open(img,'rb'))}
+	vtype = requests.post('http://plate-recognizer:8080/image-file',files=files).json()['type']
 
 	# Add vehicle to DB
 
