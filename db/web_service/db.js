@@ -32,6 +32,11 @@ var retry = 20;
 
 var retryInterval = 5;
 
+app.get("/is-alive", function(req, res){
+  let resObj = {'alive': running};
+  res.send(resObj);
+})
+
 app.get("/parkingInfo", function(req, res) {
   if(!running) {
     res.status(500).send("waiting for database");
