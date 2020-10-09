@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import docker
 import requests
 from time import sleep
+import time
 
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
@@ -48,7 +49,7 @@ def start():
 	if 'web-service' in existing_services:
 		web_service = client.services.get(existing_services['web-service'])
 	else:
-		web_service = client.services.create('<DOCKER HUB IMAGE REPO>', name='web-service',
+		web_service = client.services.create('davidyang97/web-service:latest', name='web-service',
 			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8090:8090}))
 	service_list.append(web_service)
 
@@ -129,6 +130,10 @@ def entry():
 
 	# Add vehicle to DB
 
+	now = int(time.time())
+	vehicleInfo = {'timestamp': now, 'vehicletype': <vehicletype>, 'licensenumber': <licensenumber>}
+	parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
+	snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
 
 	# Get output display
 
