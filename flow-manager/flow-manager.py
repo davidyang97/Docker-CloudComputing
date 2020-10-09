@@ -92,24 +92,32 @@ def start():
 	# The manager should confirm that all services are ready before telling the client it is ok to send data
 	# Somehow, get confirmation that all containers are up and running. If not, wait 2 sec and try again
 	# Each component could implement an 'is-alive' endpoint that returns a JSON like {"alive": True}
-	while True:
+	MAX_ATTEMPTS = 30
+	attempt = 0
+
+	while attempt < MAX_ATTEMPTS:
 		ready = True
-		if not requests.get('http://plate-recognizer:<PORT>/is-alive').json()['alive']:
-			ready = False
-		if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
-			ready = False
-		if not requests.get('http://display-creator:5001/is-alive').json()['alive']:
-			ready = False
-		if not requests.get('http://web-service:8090/is-alive').json()['alive']:
-			# API component should only return true if successfully connected to database  
-			ready = False
 
-		if ready:
-			break
-		else:
-			sleep(2)
+		try:
+			if not requests.get('http://plate-recognizer:<PORT>/is-alive').json()['alive']:
+				ready = False
+			if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
+				ready = False
+			if not requests.get('http://display-creator:5001/is-alive').json()['alive']:
+				ready = False
+			if not requests.get('http://web-service:8090/is-alive').json()['alive']:
+ 				ready = False
+ 			if ready:
+ 				return jsonify(success=True)
+		except:
+			print('Failed to establish connection to a service. Trying again...')
 
-	return jsonify(success=True)
+		attempt +=1
+		sleep(2)
+
+	return jsonify(success=False, message='Max retries exceeded')
+
+	
 
 
 
@@ -128,18 +136,19 @@ def entry():
 	files={'file':open(img,'rb')}
 	vtype = requests.post('http://plate-recognizer:8080/image-file',files=files).json()['type']
 
-	# Add vehicle to DB
 
+	# Add vehicle to DB
 	now = int(time.time())
 	vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': <licensenumber>}
 	parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
 	snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
 
+
 	# Get output display
 	chart_display = requests.post('http://display-creator:5001', json=snapshot).text
 
 
-	# Return output display to client (as String, not JSON)
+	# Return output display to client
 	message = vtype + " with license plate " + <licensenumber> + " has been assigned to " + parkingSlotType + "\n"
 	return message + chart_display
 
