@@ -140,7 +140,7 @@ def entry():
 
 
 	# Return output display to client (as String, not JSON)
-	message = vtype +" with license plate " + <licensenumber> + " has entered the parking lot.\n"
+	message = vtype + " with license plate " + <licensenumber> + " has been assigned to " + parkingSlotType + "\n"
 	return message + chart_display
 
 
