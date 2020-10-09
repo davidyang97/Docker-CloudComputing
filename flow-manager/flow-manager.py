@@ -79,7 +79,7 @@ def start():
 		display_creator = client.services.get(existing_services['display-creator'])
 	else:
 		display_creator = client.services.create('alexneal/parkinglot-display:v1.0', name='display-creator',
-			networks=['parking-lot-net'])
+			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={5001:5000}))
 	service_list.append(display_creator)
 
 
@@ -98,7 +98,7 @@ def start():
 			ready = False
 		if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
 			ready = False
-		if not requests.get('http://display-creator:5000/is-alive').json()['alive']:
+		if not requests.get('http://display-creator:5001/is-alive').json()['alive']:
 			ready = False
 		if not requests.get('http://web-service:8090/is-alive').json()['alive']:
 			# API component should only return true if successfully connected to database  
@@ -131,16 +131,17 @@ def entry():
 	# Add vehicle to DB
 
 	now = int(time.time())
-	vehicleInfo = {'timestamp': now, 'vehicletype': <vehicletype>, 'licensenumber': <licensenumber>}
+	vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': <licensenumber>}
 	parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
 	snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
 
 	# Get output display
+	chart_display = requests.post('http://display-creator:5001', json=snapshot).text
 
 
 	# Return output display to client (as String, not JSON)
-
-	return
+	message = vtype +" with license plate " + <licensenumber> + " has entered the parking lot.\n"
+	return message + chart_display
 
 
 # ENDPOINT FOR EXITING VEHICLES
