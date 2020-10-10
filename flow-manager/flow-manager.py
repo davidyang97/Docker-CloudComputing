@@ -134,7 +134,8 @@ def start():
 def entry():
 
 	# Image sent as part of request from client
-	image_base64 = request.form.get('img_base64')
+	img = request.files['file']
+	image_base64 = base64.b64encode(image_file.read())
 
 	# Send image to license plate recognizer
 	plateObj = {'img': image_base64}
@@ -142,7 +143,7 @@ def entry():
 
 	# Send image to vtype recognizer
 	# TODO: update img file name
-	files={'file':open(img,'rb')}
+	files={'file': img}
 	vtype = requests.post('http://vtype-recognizer:5000/image-file',files=files).json()['type']
 
 
