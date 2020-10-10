@@ -183,13 +183,13 @@ app.listen(8090, function(){
         process.exit();
     });
     retryConnect();
-
-    const createKeySpace = 'CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {"class": "SimpleStrategy","replication_factor":1};USE parkingLot;'
-
-    const createParkingLog = " CREATE TABLE IF NOT EXISTS parkingLog(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));"
+/*
+    //const createKeySpace = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};USE parkingLot;"
+	const createKeySpace = "USE parkingLot;"
+    const createParkingLog = "CREATE TABLE IF NOT EXISTS parkingLog(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));"
 
     const createParkingInfo = "CREATE TABLE IF NOT EXISTS parkingInfo( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));"
-
+	//console.log(createKeySpace);
     client.execute(createKeySpace + createParkingLog + createParkingInfo, [])
     .then(function() {
       ready = true;
@@ -197,6 +197,6 @@ app.listen(8090, function(){
     })
     .catch(function(err) {
       console.log(err)
-    })
+    })*/
 })
  
