@@ -136,7 +136,7 @@ def entry():
 
 	# Image sent as part of request from client
 	img = request.files['file']
-	image_base64 = base64.b64encode(image_file.read())
+	image_base64 = base64.b64encode(img.read())
 
 	# Send image to license plate recognizer
 	plateObj = {'img': image_base64}
