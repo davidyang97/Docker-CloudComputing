@@ -184,7 +184,7 @@ app.listen(8090, function(){
     });
     retryConnect();
 
-    const createKeySpace = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};USE parkingLot;"
+    const createKeySpace = 'CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {"class": "SimpleStrategy","replication_factor":1};USE parkingLot;'
 
     const createParkingLog = " CREATE TABLE IF NOT EXISTS parkingLog(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));"
 
