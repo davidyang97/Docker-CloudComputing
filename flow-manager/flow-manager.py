@@ -146,8 +146,8 @@ def entry():
 
 	# Send image to vtype recognizer
 	# TODO: update img file name
-	files={'file': img}
-	vtype = requests.post('http://vtype-recognizer:5000/image-file',files=img).json()['type']
+	files={'file': image_bytes}
+	vtype = requests.post('http://vtype-recognizer:5000/image-file',files=files).json()['type']
 
 
 	# Add vehicle to DB
