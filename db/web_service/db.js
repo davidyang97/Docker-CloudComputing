@@ -186,22 +186,14 @@ app.listen(8090, function(){
 
     const createKeySpace = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};USE parkingLot;"
 
-    const createParkingLog = " CREATE TABLE IF NOT EXISTS parkingLog( \
-    licenseNumber varchar, \
-    vehicleType varchar, \
-    enterOrExitTime timestamp, \
-    enterOrExit int, \
-    parkingSlotType varchar, \
-    PRIMARY KEY ((licenseNumber), enterOrExitTime));"
+    const createParkingLog = " CREATE TABLE IF NOT EXISTS parkingLog(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));"
 
-    const createParkingInfo = "CREATE TABLE IF NOT EXISTS parkingInfo( \
-      licenseNumber varchar, \
-      parkingSlotType varchar, \
-      PRIMARY KEY (licenseNumber));"
+    const createParkingInfo = "CREATE TABLE IF NOT EXISTS parkingInfo( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));"
 
     client.execute(createKeySpace + createParkingLog + createParkingInfo, [])
     .then(function() {
       ready = true;
+      console.log("DB init successful")
     })
     .catch(function(err) {
       console.log(err)
