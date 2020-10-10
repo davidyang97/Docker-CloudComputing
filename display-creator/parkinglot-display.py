@@ -39,9 +39,9 @@ def is_alive():
 def index():
     slot_type_counts = {}
     for vehicle in request.json:
-        if vehicle['parkingSlotType'] in slot_type_counts:
-            slot_type_counts[vehicle['parkingSlotType']] += 1
+        if vehicle['parkingslottype'] in slot_type_counts:
+            slot_type_counts[vehicle['parkingslottype']] += 1
         else:
-            slot_type_counts[vehicle['parkingSlotType']] = 1
+            slot_type_counts[vehicle['parkingslottype']] = 1
     
     return barchart(slot_type_counts)
