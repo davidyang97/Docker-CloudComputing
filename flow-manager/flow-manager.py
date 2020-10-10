@@ -59,7 +59,7 @@ def start():
 		web_service = client.services.get(existing_services['web-service'])
 	else:
 		web_service = client.services.create('davidyang97/web-service:latest', name='web-service',
-			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8090:8090}))
+			networks=['parking-lot-net'])
 	service_list.append(web_service)
 
 
@@ -69,7 +69,7 @@ def start():
 		plate_recognizer = client.services.get(existing_services['plate-recognizer'])
 	else:
 		plate_recognizer = client.services.create('sethbedford/alpr:latest', name='plate-recognizer',
-			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8081:8081}))
+			networks=['parking-lot-net'])
 	service_list.append(plate_recognizer)
 
 
@@ -79,7 +79,7 @@ def start():
 		vtype_recognizer = client.services.get(existing_services['vtype-recognizer'])
 	else:
 		vtype_recognizer = client.services.create('emwoj/detectron2:latest', name='vtype-recognizer',
-			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8080:5000}))
+			networks=['parking-lot-net'])
 	service_list.append(vtype_recognizer)
 
 
@@ -93,7 +93,7 @@ def start():
 
 
 	# Scale all the services to desired number of replicas
-	NUM_REPLICAS = 1
+	NUM_REPLICAS = 2
 	for service in service_list:
 		service.scale(NUM_REPLICAS)
 
@@ -160,7 +160,7 @@ def entry():
 
 
 	# Return output display to client
-	message = vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
+	message = now + ": " + vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
 	return message + chart_display
 
 
