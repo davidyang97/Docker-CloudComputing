@@ -106,9 +106,9 @@ def start():
 			if not requests.get('http://display-creator:5001/is-alive').json()['alive']:
 				ready = False
 			if not requests.get('http://web-service:8090/is-alive').json()['alive']:
- 				ready = False
- 			if ready:
- 				return jsonify(success=True)
+				ready = False
+			if ready:
+				return jsonify(success=True)
 		except:
 			print('Failed to establish connection to a service. Trying again...')
 
