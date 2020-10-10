@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 var client = new cassandra.Client({
   contactPoints: ['parking-lot-db'],
   localDataCenter: 'datacenter1',
-  keyspace: 'parkinglot'
+  //keyspace: 'parkinglot'
 });
 
 var typeMapping = new Map();
@@ -28,6 +28,8 @@ var price = 2;
 
 var running = false;
 
+var ready = false;
+
 var retry = 20;
 
 var retryInterval = 5;
@@ -38,7 +40,7 @@ app.get("/is-alive", function(req, res){
 })
 
 app.get("/parkingInfo", function(req, res) {
-  if(!running) {
+  if(!running || !ready) {
     res.status(500).send("waiting for database");
     return;
   }
@@ -55,7 +57,7 @@ app.get("/parkingInfo", function(req, res) {
 })
 
 app.post("/parkingInfo", function(req, res) {
-  if(!running) {
+  if(!running || !ready) {
     res.status(500).send("waiting for database");
     return;
   }
@@ -94,7 +96,7 @@ app.post("/parkingInfo", function(req, res) {
 })
 
 app.delete("/parkingInfo", function(req, res){
-  if(!running) {
+  if(!running || !ready) {
     req.status(500).send("waiting for database");
     return;
   }
@@ -148,29 +150,28 @@ app.delete("/parkingInfo", function(req, res){
 function retryConnect() {	
 	client.connect()
 	//client.execute('SELECT cql_version FROM system.local;', [])
-      	.then(function() {
+  .then(function() {
 		console.log("DB connection succeeded");
 		running = true;
 		
-      	})
+  })
 	.catch(function(err){
 		client = new cassandra.Client({
   			contactPoints: ['parking-lot-db'],
-			localDataCenter: 'datacenter1',
-  			keyspace: 'parkinglot'
+			  localDataCenter: 'datacenter1',
 		});
 		//console.error(err);
 		console.log("DB connection failed");
 		retry--;
 		//client.shutdown();
-                setTimeout(function() {
+    setTimeout(function() {
 			if(retry > 0) retryConnect();
 			else {
 				console.log("DB connection failed for too many times");
 				console.log("Process exit");
 				process.exit();
 			}
-          	}, (retryInterval * 1000));
+    }, (retryInterval * 1000));
 	});
 	
 }
@@ -178,9 +179,32 @@ function retryConnect() {
 app.listen(8090, function(){
     console.log("address is localhost:8090");
     process.on('SIGINT', function() {
-	console.log("Caught interrupt signal");
+	  console.log("Caught interrupt signal");
         process.exit();
     });
     retryConnect();
+
+    const createKeySpace = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};USE parkingLot;"
+
+    const createParkingLog = " CREATE TABLE IF NOT EXISTS parkingLog( \
+    licenseNumber varchar, \
+    vehicleType varchar, \
+    enterOrExitTime timestamp, \
+    enterOrExit int, \
+    parkingSlotType varchar, \
+    PRIMARY KEY ((licenseNumber), enterOrExitTime));"
+
+    const createParkingInfo = "CREATE TABLE IF NOT EXISTS parkingInfo( \
+      licenseNumber varchar, \
+      parkingSlotType varchar, \
+      PRIMARY KEY (licenseNumber));"
+
+    client.execute(createKeySpace + createParkingLog + createParkingInfo, [])
+    .then(function() {
+      ready = true;
+    })
+    .catch(function(err) {
+      console.log(err)
+    })
 })
  

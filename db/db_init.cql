@@ -3,7 +3,7 @@ WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};
 
 USE parkingLot;
 
-CREATE TABLE parkingLog(
+CREATE TABLE IF NOT EXISTS parkingLog(
 licenseNumber varchar,
 vehicleType varchar,
 enterOrExitTime timestamp,
@@ -11,7 +11,7 @@ enterOrExit int,
 parkingSlotType varchar,
 PRIMARY KEY ((licenseNumber), enterOrExitTime));
 
-CREATE TABLE parkingInfo(
+CREATE TABLE IF NOT EXISTS parkingInfo(
 licenseNumber varchar,
 parkingSlotType varchar,
 PRIMARY KEY (licenseNumber));
