@@ -59,8 +59,8 @@ def start():
 	if 'plate-recognizer' in existing_services:
 		plate_recognizer = client.services.get(existing_services['plate-recognizer'])
 	else:
-		plate_recognizer = client.services.create('<DOCKER HUB IMAGE REPO>', name='plate-recognizer',
-			networks=['parking-lot-net'])
+		plate_recognizer = client.services.create('sethbedford/alpr:latest', name='plate-recognizer',
+			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={8081:8081}))
 	service_list.append(plate_recognizer)
 
 
@@ -99,7 +99,7 @@ def start():
 		ready = True
 
 		try:
-			if not requests.get('http://plate-recognizer:<PORT>/is-alive').json()['alive']:
+			if not requests.get('http://plate-recognizer:8081/is-alive').json()['alive']:
 				ready = False
 			if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
 				ready = False
@@ -126,20 +126,21 @@ def start():
 def entry():
 
 	# Image sent as part of request from client
-
+	image_base64 = request.form.get('img_base64')
 
 	# Send image to license plate recognizer
-
+	plateObj = {'img': image_base64}
+	plateNumber = requests.post('http://plate-recognizer:8081/plate', data=plateObj).json()['plate']
 
 	# Send image to vtype recognizer
 	# TODO: update img file name
 	files={'file':open(img,'rb')}
-	vtype = requests.post('http://plate-recognizer:8080/image-file',files=files).json()['type']
+	vtype = requests.post('http://vtype-recognizer:8080/image-file',files=files).json()['type']
 
 
 	# Add vehicle to DB
 	now = int(time.time())
-	vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': <licensenumber>}
+	vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': plateNumber}
 	parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
 	snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
 
@@ -149,7 +150,7 @@ def entry():
 
 
 	# Return output display to client
-	message = vtype + " with license plate " + <licensenumber> + " has been assigned to " + parkingSlotType + "\n"
+	message = vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
 	return message + chart_display
 
 
