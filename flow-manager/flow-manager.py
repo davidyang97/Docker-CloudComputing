@@ -35,13 +35,21 @@ def start():
 	service_list = []
 
 
-	# CASSANDRA SERVICE
-	if 'parking-lot-db' in existing_services:
-		parking_lot_db = client.services.get(existing_services['parking-lot-db'])
-	else:
-		parking_lot_db = client.services.create('cassandra:latest', name='parking-lot-db',
-			networks=['parking-lot-net'], mounts=['parking-lot:/var/lib/cassandra'])
-	service_list.append(parking_lot_db)
+	# # CASSANDRA SERVICE -- commented out due to shared volume problem. See temp solution below
+	# if 'parking-lot-db' in existing_services:
+	# 	parking_lot_db = client.services.get(existing_services['parking-lot-db'])
+	# else:
+	# 	parking_lot_db = client.services.create('cassandra:latest', name='parking-lot-db',
+	# 		networks=['parking-lot-net'], mounts=['parking-lot:/var/lib/cassandra'])
+	# service_list.append(parking_lot_db)
+
+	# TEMPORARY SOLUTION: Cassandra is standalone container on manager node
+	try:
+		parking_lot_db = client.containers.get('parking-lot-db')
+	except docker.errors.NotFound:
+		mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
+		parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
+			detach=True, network='parking-lot-net', mounts=[mount])
 
 
 	# DATABASE API SERVICE
