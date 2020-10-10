@@ -101,9 +101,9 @@ def start():
 		try:
 			if not requests.get('http://plate-recognizer:8081/is-alive').json()['alive']:
 				ready = False
-			if not requests.get('http://vtype-recognizer:8080/is-alive').json()['alive']:
+			if not requests.get('http://vtype-recognizer:5000/is-alive').json()['alive']:
 				ready = False
-			if not requests.get('http://display-creator:5001/is-alive').json()['alive']:
+			if not requests.get('http://display-creator:5000/is-alive').json()['alive']:
 				ready = False
 			if not requests.get('http://web-service:8090/is-alive').json()['alive']:
 				ready = False
@@ -135,7 +135,7 @@ def entry():
 	# Send image to vtype recognizer
 	# TODO: update img file name
 	files={'file':open(img,'rb')}
-	vtype = requests.post('http://vtype-recognizer:8080/image-file',files=files).json()['type']
+	vtype = requests.post('http://vtype-recognizer:5000/image-file',files=files).json()['type']
 
 
 	# Add vehicle to DB
@@ -146,7 +146,7 @@ def entry():
 
 
 	# Get output display
-	chart_display = requests.post('http://display-creator:5001', json=snapshot).text
+	chart_display = requests.post('http://display-creator:5000', json=snapshot).text
 
 
 	# Return output display to client
