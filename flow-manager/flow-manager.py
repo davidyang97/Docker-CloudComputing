@@ -86,8 +86,8 @@ def start():
 	if 'display-creator' in existing_services:
 		display_creator = client.services.get(existing_services['display-creator'])
 	else:
-		display_creator = client.services.create('alexneal/parkinglot-display:v1.0', name='display-creator',
-			networks=['parking-lot-net'], endpoint_spec=docker.types.EndpointSpec(ports={5001:5000}))
+		display_creator = client.services.create('alexneal/parkinglot-display:v1.1', name='display-creator',
+			networks=['parking-lot-net'])
 	service_list.append(display_creator)
 
 
