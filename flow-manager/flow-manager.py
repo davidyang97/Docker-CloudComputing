@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import docker
 import requests
 from time import sleep
-import time
+from datetime import datetime
 
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
@@ -147,7 +147,7 @@ def entry():
 
 
 	# Add vehicle to DB
-	now = int(time.time())
+	now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 	vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': plateNumber}
 	parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
 	snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
