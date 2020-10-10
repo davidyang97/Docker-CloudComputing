@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENV FLASK_APP=test.py
+ENV FLASK_APP=alpr.py
 
 CMD flask run --host=0.0.0.0 --port=8081
