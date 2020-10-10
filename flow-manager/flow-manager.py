@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import docker
+import base64
 import requests
 from time import sleep
 from datetime import datetime
