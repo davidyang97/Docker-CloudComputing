@@ -24,6 +24,11 @@ typeMapping['truck'] = 'orange';
 typeMapping['bus'] = 'orange';
 typeMapping['motorcycle'] = 'blue';
 
+var paramMapping = new Map();
+paramMapping['licensenumber'] = 'plate';
+paramMapping['vehicletype'] = 'vtype';
+paramMapping['timestamp'] = 'timestamp';
+
 var price = 2;
 
 var running = false;
@@ -34,18 +39,73 @@ var retry = 20;
 
 var retryInterval = 5;
 
+
+
 app.get("/is-alive", function(req, res){
   let resObj = {'alive': running};
   res.send(resObj);
 })
 
-function insertObj(req, res) {
+
+
+function insertObj(jsonStr) {
+  const log_query = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
+  let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+
+  await client.execute(log_query, log_param, { prepare: true });
+
+  const lot_query = 'insert into parkingInfo (licenseNumber, parkingSlotType) values (?, ?)';
+  let lot_param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
+
+  await client.execute(lot_query, lot_param, { prepare: true });
+
+  let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vehicletype]};
+
+  return parkingSlotType;
 
 }
 
-function deleteObj(req, res) {
 
+
+function deleteObj(req) {
+
+  // select the start time and the vehicle type
+  const selectQuery = "select * from parkingLog where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
+  let selectParam = [req.query.licensenumber];
+  const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
+  console.log('Result: ', selectResult.rows);
+
+  // calculate the start time and end time of the parking
+  let startTime = Date.parse(selectResult.rows[0].enterorexittime);
+  let endTime = Date.parse(req.query.timestamp);
+  console.log("startTime:", startTime);
+  console.log("endTIme:", endTime);
+
+  // calculate the parking fee
+  var parkingFee = (endTime - startTime) / (3600 * 1000) * price;
+  console.log("parkingFee:", parkingFee);
+
+  let parkingSlotType = selectResult.rows[0].parkingslottype; // avoid inconsistency in case the map is modified
+  let vehicleType = selectResult.rows[0].vehicletype;
+
+  // log the exiting information
+  const insertQuery = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
+  let insertParam = [req.query.licensenumber, vehicleType, req.query.timestamp, 1, parkingSlotType];
+  const insertResult = await client.execute(insertQuery, insertParam, { prepare: true });
+  console.log('InsertResult: ', insertResult);
+
+  // delete the vehicle from the snapshot
+  const deleteQuery = 'delete from parkingInfo where licenseNumber = ?'
+  let deleteParam = [req.query.licensenumber];
+  const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
+  console.log('DeleteResult: ', deleteResult);
+
+  let parkingFeeObj = {'parkingfee': parkingFee};
+
+  return parkingFeeObj;
 }
+
+
 
 async function getObj() {
 
@@ -57,7 +117,6 @@ async function getObj() {
   return resObj;
 
 }
-
 
 app.get("/parkingInfo", async function(req, res) {
   if(!running || !ready) {
@@ -71,13 +130,13 @@ app.get("/parkingInfo", async function(req, res) {
   res.status(200).send(resObj.rows);
 })
 
-app.post("/parkingInfo", function(req, res) {
+
+
+app.post("/parkingInfo", async function(req, res) {
   if(!running || !ready) {
     res.status(500).send("waiting for database");
     return;
   }
-
-  
 
   let jsonStr;
   if(req.body)
@@ -87,30 +146,18 @@ app.post("/parkingInfo", function(req, res) {
   }
   else
   {
-      res.status(400).send("Error Body Param");
+      res.status(400).send("Body Param Error!");
       return;
   }
 
-  const query = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+  const parkingSlotType = await insertObj(jsonStr);
 
-  client.execute(query, param, { prepare: true })
-  .then(function(result) {
-    //console.log('Result: ', result);
-
-    const query = 'insert into parkingInfo (licenseNumber, parkingSlotType) values (?, ?)';
-    let param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
-
-    client.execute(query, param, { prepare: true })
-    .then(function(result) {
-
-      let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vehicletype]};
-      res.status(200).send(parkingSlotType);
-    })
-  })  
+  res.status(200).send(parkingSlotType);
 })
 
-app.delete("/parkingInfo", function(req, res){
+
+
+app.delete("/parkingInfo", async function(req, res){
   if(!running || !ready) {
     req.status(500).send("waiting for database");
     return;
@@ -123,42 +170,9 @@ app.delete("/parkingInfo", function(req, res){
     return;
   }
 
-  // select the start time and the vehicle type
-  const selectQuery = "select * from parkingLog where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
-  let selectParam = [req.query.licensenumber];
+  let parkingFeeObj = await deleteObj(req);
 
-  client.execute(selectQuery, selectParam, { prepare: true })
-  .then(function(selectResult) {
-    console.log('Result: ', selectResult.rows);
-    let startTime = Date.parse(selectResult.rows[0].enterorexittime);
-    let endTime = Date.parse(req.query.timestamp);
-    console.log("startTime:", startTime);
-    console.log("endTIme:", endTime);
-    var parkingFee = (endTime - startTime) / (3600 * 1000) * price;
-    console.log("parkingFee:", parkingFee);
-    let parkingSlotType = selectResult.rows[0].parkingslottype; // avoid inconsistency in case the map is modified
-    let vehicleType = selectResult.rows[0].vehicletype;
-
-    // insert the leaving log to db
-    const insertQuery = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-    let insertParam = [req.query.licensenumber, vehicleType, req.query.timestamp, 1, parkingSlotType];
-
-    client.execute(insertQuery, insertParam, { prepare: true })
-    .then(function(insertResult) {
-      console.log('InsertResult: ', insertResult);
-
-      // delete the vehicle info in current parkingLot snapshot
-      const deleteQuery = 'delete from parkingInfo where licenseNumber = ?'
-      let deleteParam = [req.query.licensenumber];
-        client.execute(deleteQuery, deleteParam, { prepare: true })
-      .then(function(deleteResult) {
-        console.log('DeleteResult: ', deleteResult);
-        let parkingFeeObj = {'parkingfee': parkingFee};
-        res.status(200).send(parkingFeeObj);
-      }) 
-    })
-
-  })  
+  res.status(200).send(parkingFeeObj);
 
 })
 
