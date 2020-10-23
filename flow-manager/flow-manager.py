@@ -10,7 +10,7 @@ SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:latest', 'po
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.0', 'port': '5000'}}
 
-NUM_REPLICAS = 2  # Number of replicas to deploy of the services
+NUM_REPLICAS = 1  # Number of replicas to deploy of the services
 
 
 # Connect to docker daemon on host machine (requires volume mount)
@@ -42,7 +42,6 @@ def start():
     existing_services = {service.name:service.id for service in client.services.list()}
 
 
-
     # TEMPORARY SOLUTION: Cassandra is standalone container on manager node
     # Keep this solution in place until we solve shared volume problem
     try:
@@ -55,11 +54,11 @@ def start():
 
     # Start requested services (if necessary) and scale them
     for service_name in request.json['services']:
-        name = SERVICE_PARAMS['image']
+        name = SERVICE_PARAMS[service_name]['image']
         if service_name in existing_services:
             service = client.services.get(existing_services[service_name])
         else:
-            service = client.services.create(SERVICE_PARAMS['image'], name=service_name,
+            service = client.services.create(SERVICE_PARAMS[service_name]['image'], name=service_name,
                 networks=['parking-lot-net'])
         service.scale(NUM_REPLICAS)
 
@@ -130,6 +129,7 @@ def process():
     # # Return output display to client
     # message = now + ": " + vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
     # return message + chart_display
+    return(True)
 
 
 
