@@ -48,7 +48,7 @@ app.get("/is-alive", function(req, res){
 
 
 
-function insertObj(jsonStr) {
+async function insertObj(jsonStr) {
   const log_query = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
   let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
 
@@ -67,7 +67,7 @@ function insertObj(jsonStr) {
 
 
 
-function deleteObj(req) {
+async function deleteObj(req) {
 
   // select the start time and the vehicle type
   const selectQuery = "select * from parkingLog where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
