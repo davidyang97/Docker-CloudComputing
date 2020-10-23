@@ -35,13 +35,39 @@ def is_alive():
     return jsonify({"alive": True})
 
 
-@app.route('/', methods=['POST'])
-def index():
-    slot_type_counts = {}
-    for vehicle in request.json:
-        if vehicle['parkingslottype'] in slot_type_counts:
-            slot_type_counts[vehicle['parkingslottype']] += 1
+@app.route('/process', methods=['POST'])
+def process():
+
+    output = ''
+
+    if 'vtype' in request.json:
+        output += request.json['vtype'] + ' '
+    else:
+        output += 'Vehicle '
+
+    if 'plate' in request.json:
+        output += 'with license plate ' + request.json['plate'] + ' '
+
+    if 'db_behavior' in request.json:
+        entering = request.json['db_behavior']
+        if entering:
+            output += 'has entered parking lot '
         else:
-            slot_type_counts[vehicle['parkingslottype']] = 1
+            output += 'has exited parking lot '
+
+    if 'parking_lot_id' in request.json:
+        output += str(request.json['parking_lot_id'])
+
+    output += '\n'
+
+    if 'snapshot' in request.json:
+        slot_type_counts = {}
+        for vehicle in request.json['snapshot']:
+            if vehicle['parkingslottype'] in slot_type_counts:
+                slot_type_counts[vehicle['parkingslottype']] += 1
+            else:
+                slot_type_counts[vehicle['parkingslottype']] = 1
     
-    return barchart(slot_type_counts)
+        output += barchart(slot_type_counts)
+
+    return jsonify({"display": output})
