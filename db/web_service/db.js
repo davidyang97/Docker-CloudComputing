@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 var client = new cassandra.Client({
   contactPoints: ['parking-lot-db'],
   localDataCenter: 'datacenter1',
-  //keyspace: 'parkinglot'
+  keyspace: 'parkinglot'
 });
 
 var typeMapping = new Map();
@@ -39,21 +39,36 @@ app.get("/is-alive", function(req, res){
   res.send(resObj);
 })
 
+function insertObj(req, res) {
+
+}
+
+function deleteObj(req, res) {
+
+}
+
+async function getObj(req) {
+
+  console.log("GET: /parkingInfo \n");
+  const query = 'select * from parkingInfo';
+  const param = [];
+
+  let resObj = await client.execute(query, param, { prepare: true })
+
+  return resObj;
+
+}
+
+
 app.get("/parkingInfo", function(req, res) {
   if(!running || !ready) {
     res.status(500).send("waiting for database");
     return;
   }
 
-  console.log("GET: /parkingInfo \n");
-  const query = 'select * from parkingInfo';
-  const param = [];
-
-  client.execute(query, param, { prepare: true })
-  .then(function(result) {
-    console.log('Result: ', result.rows);
-    res.status(200).send(result.rows);
-  })  
+  let resObj = getObj(req);
+  console.log('Result: ', resObj.rows);
+  res.status(200).send(resObj.rows);
 })
 
 app.post("/parkingInfo", function(req, res) {
@@ -158,7 +173,8 @@ function retryConnect() {
 	.catch(function(err){
 		client = new cassandra.Client({
   			contactPoints: ['parking-lot-db'],
-			  localDataCenter: 'datacenter1',
+        localDataCenter: 'datacenter1',
+        keyspace: 'parkinglot'
 		});
 		//console.error(err);
 		console.log("DB connection failed");
@@ -179,8 +195,8 @@ function retryConnect() {
 app.listen(8090, function(){
     console.log("address is localhost:8090");
     process.on('SIGINT', function() {
-	  console.log("Caught interrupt signal");
-        process.exit();
+      console.log("Caught interrupt signal");
+          process.exit();
     });
     retryConnect();
 /*
