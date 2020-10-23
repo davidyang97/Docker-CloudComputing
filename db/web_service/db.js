@@ -28,7 +28,7 @@ var price = 2;
 
 var running = false;
 
-var ready = false;
+var ready = true;
 
 var retry = 20;
 
@@ -47,26 +47,26 @@ function deleteObj(req, res) {
 
 }
 
-async function getObj(req) {
+async function getObj() {
 
-  console.log("GET: /parkingInfo \n");
   const query = 'select * from parkingInfo';
   const param = [];
 
-  let resObj = await client.execute(query, param, { prepare: true })
-
+  const resObj = await client.execute(query, param, { prepare: true });
+  //console.log(resObj);
   return resObj;
 
 }
 
 
-app.get("/parkingInfo", function(req, res) {
+app.get("/parkingInfo", async function(req, res) {
   if(!running || !ready) {
     res.status(500).send("waiting for database");
     return;
   }
 
-  let resObj = getObj(req);
+  console.log("GET: /parkingInfo \n");
+  const resObj =  await getObj(); 
   console.log('Result: ', resObj.rows);
   res.status(200).send(resObj.rows);
 })
