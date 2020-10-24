@@ -49,13 +49,32 @@ app.get("/is-alive", function(req, res){
 
 
 async function insertObj(jsonStr) {
-  const log_query = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+
+  var parkingLog_name;
+  var parkingInfo_name;
+  if(jsonStr.parking_lot_id) {
+    parkingLog_name = 'parkingLog_' + jsonStr.parking_lot_id;
+    parkingInfo_name = 'parkingInfo_' + jsonStr.parking_lot_id;
+  }
+  else {
+    parkingLog_name = 'parkingLog';
+    parkingInfo_name = 'parkingInfo';
+  }
+
+  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ? (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
+  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS ? ( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
+  const result1 = await client.execute(create_parkingLog, parkingLog_name, { prepare: true });
+  console.log('Result1: ', result1 + '\n');
+  const result2 = await client.execute(create_parkingInfo, parkingInfo_name, { prepare: true });
+  console.log('Result2: ', result2 + '\n');
+
+  const log_query = 'insert into ? (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
+  let log_param = [parkingLog_name, jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
 
   await client.execute(log_query, log_param, { prepare: true });
 
-  const lot_query = 'insert into parkingInfo (licenseNumber, parkingSlotType) values (?, ?)';
-  let lot_param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
+  const lot_query = 'insert into ? (licenseNumber, parkingSlotType) values (?, ?)';
+  let lot_param = [parkingInfo_name, jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
 
   await client.execute(lot_query, lot_param, { prepare: true });
 
@@ -67,17 +86,17 @@ async function insertObj(jsonStr) {
 
 
 
-async function deleteObj(req) {
+async function deleteObj(licensenumber, timestamp) {
 
   // select the start time and the vehicle type
   const selectQuery = "select * from parkingLog where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
-  let selectParam = [req.query.licensenumber];
+  let selectParam = [licensenumber];
   const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
   console.log('Result: ', selectResult.rows);
 
   // calculate the start time and end time of the parking
   let startTime = Date.parse(selectResult.rows[0].enterorexittime);
-  let endTime = Date.parse(req.query.timestamp);
+  let endTime = Date.parse(timestamp);
   console.log("startTime:", startTime);
   console.log("endTIme:", endTime);
 
@@ -90,13 +109,13 @@ async function deleteObj(req) {
 
   // log the exiting information
   const insertQuery = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let insertParam = [req.query.licensenumber, vehicleType, req.query.timestamp, 1, parkingSlotType];
+  let insertParam = [licensenumber, vehicleType, timestamp, 1, parkingSlotType];
   const insertResult = await client.execute(insertQuery, insertParam, { prepare: true });
   console.log('InsertResult: ', insertResult);
 
   // delete the vehicle from the snapshot
   const deleteQuery = 'delete from parkingInfo where licenseNumber = ?'
-  let deleteParam = [req.query.licensenumber];
+  let deleteParam = [licensenumber];
   const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
   console.log('DeleteResult: ', deleteResult);
 
@@ -117,6 +136,8 @@ async function getObj() {
   return resObj;
 
 }
+
+
 
 app.get("/parkingInfo", async function(req, res) {
   if(!running || !ready) {
@@ -170,11 +191,13 @@ app.delete("/parkingInfo", async function(req, res){
     return;
   }
 
-  let parkingFeeObj = await deleteObj(req);
+  let parkingFeeObj = await deleteObj(req.query.licensenumber, req.query.timestamp);
 
   res.status(200).send(parkingFeeObj);
 
 })
+
+
 
 function retryConnect() {	
 	client.connect()
@@ -205,6 +228,8 @@ function retryConnect() {
 	});
 	
 }
+
+
 
 app.listen(8090, function(){
     console.log("address is localhost:8090");
