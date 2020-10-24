@@ -39,6 +39,8 @@ var retry = 20;
 
 var retryInterval = 5;
 
+var enableLog = 2;
+
 
 
 app.get("/is-alive", function(req, res){
@@ -46,6 +48,12 @@ app.get("/is-alive", function(req, res){
   res.send(resObj);
 })
 
+app.get("/setEnableLog", function(req, res) {
+  if(req.query.log != null) {
+    enableLog = req.query.log;
+  }
+  res.status(200).send("OK");
+})
 
 
 async function insertObj(jsonStr) {
@@ -64,19 +72,21 @@ async function insertObj(jsonStr) {
   const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ' + parkingLog_name + ' (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
   const create_parkingInfo = "CREATE TABLE IF NOT EXISTS " + parkingInfo_name + " (licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
   const result1 = await client.execute(create_parkingLog, [], { prepare: true });
-  //console.log('Result1: ', result1);
+  if(enableLog == 2)console.log('Result1: ', result1);
   const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
-  //console.log('Result2: ', result2);
+  if(enableLog == 2)console.log('Result2: ', result2);
 
   const log_query = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
   let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
 
-  await client.execute(log_query, log_param, { prepare: true });
+  const result3 = await client.execute(log_query, log_param, { prepare: true });
+  if(enableLog == 2)console.log('Result3: ', result3);
 
   const lot_query = 'insert into ' + parkingInfo_name  + ' (licenseNumber, parkingSlotType) values (?, ?)';
   let lot_param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
 
-  await client.execute(lot_query, lot_param, { prepare: true });
+  const result4 = await client.execute(lot_query, lot_param, { prepare: true });
+  if(enableLog == 2)console.log('Result4: ', result4);
 
   let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vehicletype]};
 
@@ -86,13 +96,24 @@ async function insertObj(jsonStr) {
 
 
 
-async function deleteObj(licensenumber, timestamp) {
+async function deleteObj(licensenumber, timestamp, parking_lot_id) {
+
+  var parkingLog_name;
+  var parkingInfo_name;
+  if(parking_lot_id) {
+    parkingLog_name = 'parkingLog_' + parking_lot_id;
+    parkingInfo_name = 'parkingInfo_' + parking_lot_id;
+  }
+  else {
+    parkingLog_name = 'parkingLog';
+    parkingInfo_name = 'parkingInfo';
+  }
 
   // select the start time and the vehicle type
-  const selectQuery = "select * from parkingLog where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
+  const selectQuery = "select * from " + parkingLog_name + " where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
   let selectParam = [licensenumber];
   const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
-  console.log('Result: ', selectResult.rows);
+  if(enableLog >= 1)console.log('Result: ', selectResult.rows);
 
   // calculate the start time and end time of the parking
   let startTime = Date.parse(selectResult.rows[0].enterorexittime);
@@ -108,13 +129,13 @@ async function deleteObj(licensenumber, timestamp) {
   let vehicleType = selectResult.rows[0].vehicletype;
 
   // log the exiting information
-  const insertQuery = 'insert into parkingLog (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
+  const insertQuery = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
   let insertParam = [licensenumber, vehicleType, timestamp, 1, parkingSlotType];
   const insertResult = await client.execute(insertQuery, insertParam, { prepare: true });
   console.log('InsertResult: ', insertResult);
 
   // delete the vehicle from the snapshot
-  const deleteQuery = 'delete from parkingInfo where licenseNumber = ?'
+  const deleteQuery = 'delete from' + parkingInfo_name + ' where licenseNumber = ?'
   let deleteParam = [licensenumber];
   const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
   console.log('DeleteResult: ', deleteResult);
@@ -126,9 +147,17 @@ async function deleteObj(licensenumber, timestamp) {
 
 
 
-async function getObj() {
+async function getObj(parking_lot_id) {
 
-  const query = 'select * from parkingInfo';
+  let parkingInfo_name;
+  if(parking_lot_id) {
+    parkingInfo_name = parking_lot_id;
+  }
+  else {
+    parkingInfo_name = 'parkingInfo';
+  }
+
+  const query = 'select * from ' + parkingInfo_name;
   const param = [];
 
   const resObj = await client.execute(query, param, { prepare: true });
@@ -146,7 +175,7 @@ app.get("/parkingInfo", async function(req, res) {
   }
 
   console.log("GET: /parkingInfo \n");
-  const resObj =  await getObj(); 
+  const resObj =  await getObj(req.query.parking_lot_id); 
   console.log('Result: ', resObj.rows);
   res.status(200).send(resObj.rows);
 })
@@ -164,6 +193,7 @@ app.post("/parkingInfo", async function(req, res) {
   {
       console.log("POST: /parkingInfo \n", req.body);
       jsonStr = req.body;
+      if(enableLog == 2)console.log(jsonStr);
   }
   else
   {
@@ -191,10 +221,51 @@ app.delete("/parkingInfo", async function(req, res){
     return;
   }
 
-  let parkingFeeObj = await deleteObj(req.query.licensenumber, req.query.timestamp);
+  let parkingFeeObj = await deleteObj(req.query.licensenumber, req.query.timestamp, req.query.parking_lot_id);
 
   res.status(200).send(parkingFeeObj);
 
+})
+
+app.post("/process", async function(req, res) {
+  if(!running || !ready) {
+    req.status(500).send("waiting for database");
+    return;
+  }
+
+  let jsonStr;
+  if(req.body)
+  {
+      console.log("POST: /process \n");
+      jsonStr = req.body;
+      if(enableLog == 2)console.log(jsonStr);
+  }
+  else
+  {
+      res.status(400).send("Body Param Error!");
+      return;
+  }
+
+  if(jsonStr.parking_lot_id == null) {
+    res.status(400).send("Missing parking_lot_id!");
+    return;
+  }
+
+  if(jsonStr.db_behavior != null && jsonStr.licensenumber != null && jsonStr.vehicletype != null && jsonStr.timestamp != null) {
+    if(jsonStr.db_behavior == true) {
+      const insert_result = await insertObj(jsonStr);
+      jsonStr.set("parkingslottype", insert_result.parkingslottype);
+    }
+    else {
+      const delete_result = await deleteObj(jsonStr.licensenumber, jsonStr.timestamp, jsonStr.parking_lot_id);
+      jsonStr.set("parkingfee", delete_result.parkingfee);
+    }
+  }
+
+  const result = await getObj(jsonStr.parking_lot_id);
+  jsonStr.set("snapshot", result.rows)
+  jsonStr.set("DB_success",true);
+  res.status(200).send(jsonStr);
 })
 
 
