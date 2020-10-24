@@ -39,15 +39,17 @@ var retry = 20;
 
 var retryInterval = 5;
 
-var enableLog = 2;
+var enableLog = 0;
 
 
-
+// send alive msg to workflow manager
 app.get("/is-alive", function(req, res){
   let resObj = {'alive': running};
   res.send(resObj);
 })
 
+
+// set log level
 app.get("/setEnableLog", function(req, res) {
   if(req.query.log != null) {
     enableLog = req.query.log;
@@ -55,7 +57,7 @@ app.get("/setEnableLog", function(req, res) {
   res.status(200).send("OK");
 })
 
-
+// insert vehicle info into db when entering parking lot
 async function insertObj(jsonStr) {
 
   var parkingLog_name;
@@ -95,7 +97,7 @@ async function insertObj(jsonStr) {
 }
 
 
-
+// delete vehicle info when exiting parking lot
 async function deleteObj(licensenumber, timestamp, parking_lot_id) {
 
   var parkingLog_name;
@@ -132,13 +134,13 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   const insertQuery = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime,  enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
   let insertParam = [licensenumber, vehicleType, timestamp, 1, parkingSlotType];
   const insertResult = await client.execute(insertQuery, insertParam, { prepare: true });
-  console.log('InsertResult: ', insertResult);
+  if(enableLog == 2)console.log('InsertResult: ', insertResult);
 
   // delete the vehicle from the snapshot
   const deleteQuery = 'delete from ' + parkingInfo_name + ' where licenseNumber = ?'
   let deleteParam = [licensenumber];
   const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
-  console.log('DeleteResult: ', deleteResult);
+  if(enableLog == 2)console.log('DeleteResult: ', deleteResult);
 
   let parkingFeeObj = {'parkingfee': parkingFee};
 
@@ -146,7 +148,7 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
 }
 
 
-
+// get parking lot snapshot
 async function getObj(parking_lot_id) {
 
   let parkingInfo_name;
@@ -161,7 +163,7 @@ async function getObj(parking_lot_id) {
   const param = [];
 
   const resObj = await client.execute(query, param, { prepare: true });
-  //console.log(resObj);
+  if(enableLog == 2)console.log(resObj);
   return resObj;
 
 }
@@ -176,7 +178,7 @@ app.get("/parkingInfo", async function(req, res) {
 
   console.log("GET: /parkingInfo \n");
   const resObj =  await getObj(req.query.parking_lot_id); 
-  console.log('Result: ', resObj.rows);
+  if(enableLog >= 1)console.log('Result: ', resObj.rows);
   res.status(200).send(resObj.rows);
 })
 
@@ -226,6 +228,7 @@ app.delete("/parkingInfo", async function(req, res){
   res.status(200).send(parkingFeeObj);
 
 })
+
 
 app.post("/process", async function(req, res) {
   if(!running || !ready) {
@@ -309,20 +312,5 @@ app.listen(8090, function(){
           process.exit();
     });
     retryConnect();
-/*
-    //const createKeySpace = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH REPLICATION = {'class': 'SimpleStrategy','replication_factor':1};USE parkingLot;"
-	const createKeySpace = "USE parkingLot;"
-    const createParkingLog = "CREATE TABLE IF NOT EXISTS parkingLog(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));"
-
-    const createParkingInfo = "CREATE TABLE IF NOT EXISTS parkingInfo( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));"
-	//console.log(createKeySpace);
-    client.execute(createKeySpace + createParkingLog + createParkingInfo, [])
-    .then(function() {
-      ready = true;
-      console.log("DB init successful")
-    })
-    .catch(function(err) {
-      console.log(err)
-    })*/
 })
  
