@@ -44,26 +44,33 @@ var enableLog = 0;
 app.delete("/clr", async function(req, res) {
   if(req.query.parking_lot_id) {
     const parkingInfo_name = "parkingInfo_" + req.query.parking_lot_id;
-    const parkingLog_name = "parkngLog_" + req.query.parking_lot_id;
+    const parkingLog_name = "parkingLog_" + req.query.parking_lot_id;
     const query1 = "truncate " + parkingInfo_name; 
     const query2 = "truncate " + parkingLog_name;
 
     await client.execute(query1, []);
     await client.execute(query2, []);
+
+    console.log("Clr:", req.query.parking_lot_id);
+    res.status(200).send('OK');
   }
   else {
-    const query = "describe tables";
-    const result = await client.execute(query, []);
-    const tables = result.rows;
-    tables.foreach(element => {
+    //const query = "DESCRIBE tables";
+    //const result = await client.execute(query, []);
+    //const tables = result.rows;
+    /*const tables = await client.metadata.getTable('parkingInfo');
+    console.log(tables);
+    /*tables.foreach(async function(element) {
       if(element != "parkingInfo" && element != "parkingLog") {
         const query = "truncate " + element; 
         await client.execute(query, []);
       }
-    });
+    });*/
+
+    console.log("Clr: Missing parking_lot_id");
+    res.status(400).send("Clr Error: Missing parking_lot_id")
   }
 
-  res.status(200).send("OK");
 })
 
 // send alive msg to workflow manager
