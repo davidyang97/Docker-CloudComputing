@@ -26,19 +26,21 @@ Nodejs Web Service
 ***
 ## Sample Test
 - **Warning:** should change the licensenumber because someone may have tested and added to db
-- Retrieve the snapshot of parking lot
-```
-	curl localhost:8090/parkingInfo
-```
-- Insert the vehicle information when entering parking lot and return the corresponding parking slot type
+- Retrieve the snapshot of parking lot 0
 ```
 	curl -X POST -H "Content-Type: application/json" \
-    	-d '{"licensenumber": "AAA3333", "vehicletype": "truck", "timestamp":"2019-09-09 12:12:12"}' \
-	localhost:8090/parkingInfo
+    	-d '{ "parking_lot_id":"0"}' \
+	localhost:8090/process
 ```
-- Delete the vehicle information
-	- There are more than 1 parameter in the delete method, and I don't know how to use curl to achieve that
-	- so I wrote another node file to do the test
+- Insert the vehicle information when entering parking lot and return the corresponding parking slot type and the current snapshot
 ```
-	node test.js
+	curl -X POST -H "Content-Type: application/json" \
+    	-d '{"licensenumber": "AAA1234", "vehicletype": "car", "timestamp":"2019-09-09 12:12:12", "parking_lot_id":"0", "db_behavior":true}' \
+	localhost:8090/process
+```
+- Delete the vehicle information and return the parking fee
+```
+	curl -X POST -H "Content-Type: application/json" \
+    	-d '{"licensenumber": "AAA1234", "vehicletype": "car", "timestamp":"2019-09-09 16:12:12", "parking_lot_id":"0", "db_behavior":false}' \
+	localhost:8090/process
 ```
