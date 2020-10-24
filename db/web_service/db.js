@@ -61,20 +61,20 @@ async function insertObj(jsonStr) {
     parkingInfo_name = 'parkingInfo';
   }
 
-  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ? (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
-  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS ? ( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
-  const result1 = await client.execute(create_parkingLog, parkingLog_name, { prepare: true });
+  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS' + parkingLog_name + '(licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
+  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS" + parkingInfo_name + "( licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
+  const result1 = await client.execute(create_parkingLog, [], { prepare: true });
   console.log('Result1: ', result1 + '\n');
-  const result2 = await client.execute(create_parkingInfo, parkingInfo_name, { prepare: true });
+  const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
   console.log('Result2: ', result2 + '\n');
 
-  const log_query = 'insert into ? (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let log_param = [parkingLog_name, jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+  const log_query = 'insert into' + parkingLog_name + '(licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
+  let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
 
   await client.execute(log_query, log_param, { prepare: true });
 
-  const lot_query = 'insert into ? (licenseNumber, parkingSlotType) values (?, ?)';
-  let lot_param = [parkingInfo_name, jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
+  const lot_query = 'insert into' + parkingInfo_name  + '(licenseNumber, parkingSlotType) values (?, ?)';
+  let lot_param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
 
   await client.execute(lot_query, lot_param, { prepare: true });
 
