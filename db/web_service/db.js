@@ -135,7 +135,7 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   console.log('InsertResult: ', insertResult);
 
   // delete the vehicle from the snapshot
-  const deleteQuery = 'delete from' + parkingInfo_name + ' where licenseNumber = ?'
+  const deleteQuery = 'delete from ' + parkingInfo_name + ' where licenseNumber = ?'
   let deleteParam = [licensenumber];
   const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
   console.log('DeleteResult: ', deleteResult);
@@ -151,7 +151,7 @@ async function getObj(parking_lot_id) {
 
   let parkingInfo_name;
   if(parking_lot_id) {
-    parkingInfo_name = parking_lot_id;
+    parkingInfo_name = 'parkingInfo_' + parking_lot_id;
   }
   else {
     parkingInfo_name = 'parkingInfo';
@@ -254,17 +254,17 @@ app.post("/process", async function(req, res) {
   if(jsonStr.db_behavior != null && jsonStr.licensenumber != null && jsonStr.vehicletype != null && jsonStr.timestamp != null) {
     if(jsonStr.db_behavior == true) {
       const insert_result = await insertObj(jsonStr);
-      jsonStr.set("parkingslottype", insert_result.parkingslottype);
+      jsonStr.parkingslottype = insert_result.parkingslottype;
     }
     else {
       const delete_result = await deleteObj(jsonStr.licensenumber, jsonStr.timestamp, jsonStr.parking_lot_id);
-      jsonStr.set("parkingfee", delete_result.parkingfee);
+      jsonStr.parkingfee = delete_result.parkingfee;
     }
   }
 
   const result = await getObj(jsonStr.parking_lot_id);
-  jsonStr.set("snapshot", result.rows)
-  jsonStr.set("DB_success",true);
+  jsonStr.snapshot = result.rows;
+  jsonStr.DB_success = true;
   res.status(200).send(jsonStr);
 })
 
