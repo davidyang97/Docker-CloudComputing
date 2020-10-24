@@ -41,6 +41,30 @@ var retryInterval = 5;
 
 var enableLog = 0;
 
+app.delete("/clr", async function(req, res) {
+  if(req.query.parking_lot_id) {
+    const parkingInfo_name = "parkingInfo_" + req.query.parking_lot_id;
+    const parkingLog_name = "parkngLog_" + req.query.parking_lot_id;
+    const query1 = "truncate " + parkingInfo_name; 
+    const query2 = "truncate " + parkingLog_name;
+
+    await client.execute(query1, []);
+    await client.execute(query2, []);
+  }
+  else {
+    const query = "describe tables";
+    const result = await client.execute(query, []);
+    const tables = result.rows;
+    tables.foreach(element => {
+      if(element != "parkingInfo" && element != "parkingLog") {
+        const query = "truncate " + element; 
+        await client.execute(query, []);
+      }
+    });
+  }
+
+  res.status(200).send("OK");
+})
 
 // send alive msg to workflow manager
 app.get("/is-alive", function(req, res){
