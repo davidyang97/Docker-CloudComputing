@@ -57,17 +57,18 @@ else:
 
 
 # Data generation
-for filename in os.listdir('.'):
+directory = './photos/'
+for filename in os.listdir(directory):
     if filename.endswith(".jpg"):
         # Create JSON object
         data = {"services": services,
                 "db_behavior": db_behavior,
                 "parking_lot_id": args.lot}
-        with open(filename, "rb") as img_file:
+        with open(directory + filename, "rb") as img_file:
             data['img'] = base64.b64encode(img_file.read())
 
         # Send request and print response
-        print('\nDetected Entering Vehicle...')
+        print('\nDetected vehicle...')
         response = requests.post(url, data=data)
         print(response.json()['display'])
 
