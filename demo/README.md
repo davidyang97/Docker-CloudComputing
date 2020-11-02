@@ -13,7 +13,7 @@ Example usage: `python wf-request.py enter --url http://localhot:5000`
 
 # data-generator.py
 
-This script reads the jpg files in its folder to generate data for workflow input. It has the following command line arguments:
+This script reads the jpg files in the `photos` directory to generate data for workflow input. It has the following command line arguments:
 
 
 - `enter` or `exit` (required): Determines whether to simulate entering or exiting vehicles
