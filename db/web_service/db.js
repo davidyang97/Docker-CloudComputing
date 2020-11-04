@@ -312,8 +312,12 @@ function retryConnect() {
 
     client.execute(query)
     .then(function() {
-      console.log("DB connection succeeded");
-		  running = true;
+      const query = "use parkingLot;"
+      client.execute(query)
+      .then(function(){
+        console.log("DB connection succeeded");
+		    running = true;
+      })
     })
   })
 	.catch(function(err){
