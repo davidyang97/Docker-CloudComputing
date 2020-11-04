@@ -87,12 +87,18 @@ app.get("/setEnableLog", function(req, res) {
 })
 
 async function createTable(parkingLog_name, parkingInfo_name) {
-  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ' + parkingLog_name + ' (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
-  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS " + parkingInfo_name + " (licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
-  const result1 = await client.execute(create_parkingLog, [], { prepare: true });
-  if(enableLog == 2)console.log('Result1: ', result1);
-  const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
-  if(enableLog == 2)console.log('Result2: ', result2);
+  if(parkingLog_name) {
+    const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ' + parkingLog_name + ' (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
+    const result1 = await client.execute(create_parkingLog, [], { prepare: true });
+    if(enableLog == 2)console.log('Result1: ', result1);
+  }
+  
+  if(parkingInfo_name) {
+    const create_parkingInfo = "CREATE TABLE IF NOT EXISTS " + parkingInfo_name + " (licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
+    const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
+    if(enableLog == 2)console.log('Result2: ', result2);
+  }
+  
 }
 
 // insert vehicle info into db when entering parking lot
@@ -152,6 +158,12 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
   if(enableLog >= 1)console.log('Result: ', selectResult.rows);
 
+  if(!selectResult.rows || selectResult.rows.length == 0) {
+    console.log("Query failed!");
+    throw new Error("Query failed!");
+  }
+
+
   // calculate the start time and end time of the parking
   let startTime = Date.parse(selectResult.rows[0].enterorexittime);
   let endTime = Date.parse(timestamp);
@@ -187,11 +199,14 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
 // get parking lot snapshot
 async function getObj(parking_lot_id) {
 
-  let parkingInfo_name;
+  var parkingLog_name;
+  var parkingInfo_name;
   if(parking_lot_id) {
+    parkingLog_name = 'parkingLog_' + parking_lot_id;
     parkingInfo_name = 'parkingInfo_' + parking_lot_id;
   }
   else {
+    parkingLog_name = 'parkingLog';
     parkingInfo_name = 'parkingInfo';
   }
 
@@ -327,7 +342,9 @@ app.post("/process", async function(req, res) {
   }
   catch(err) {
     console.log(err);
-    res.status(400).send(err);
+    jsonStr.DB_success = false;
+    jsonStr.DB_err = err;
+    res.status(400).send(jsonStr);
   }
 })
 
