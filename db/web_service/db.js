@@ -14,8 +14,7 @@ app.use(bodyParser.urlencoded({
 
 var client = new cassandra.Client({
   contactPoints: ['parking-lot-db'],
-  localDataCenter: 'datacenter1',
-  keyspace: 'parkinglot'
+  localDataCenter: 'datacenter1'
 });
 
 var typeMapping = new Map();
@@ -308,15 +307,19 @@ function retryConnect() {
 	client.connect()
 	//client.execute('SELECT cql_version FROM system.local;', [])
   .then(function() {
-		console.log("DB connection succeeded");
-		running = true;
-		
+    const query = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH replication =" +
+      "{'class': 'SimpleStrategy','replication_factor':1}";
+
+    client.execute(query)
+    .then(function() {
+      console.log("DB connection succeeded");
+		  running = true;
+    })
   })
 	.catch(function(err){
 		client = new cassandra.Client({
   			contactPoints: ['parking-lot-db'],
-        localDataCenter: 'datacenter1',
-        keyspace: 'parkinglot'
+        localDataCenter: 'datacenter1'
 		});
 		//console.error(err);
 		console.log("DB connection failed");
