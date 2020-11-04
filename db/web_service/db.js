@@ -1,4 +1,6 @@
 const cassandra = require('cassandra-driver');
+const { types } = cassandra;
+
 var express = require('express');
 var app = express();
 
@@ -12,10 +14,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-var client = new cassandra.Client({
-  contactPoints: ['parking-lot-db'],
-  localDataCenter: 'datacenter1'
-});
+var client;
 
 var typeMapping = new Map();
 typeMapping['car'] = 'green';
@@ -326,52 +325,48 @@ app.post("/process", async function(req, res) {
 
 
 
-function retryConnect() {	
-	client.connect()
-	//client.execute('SELECT cql_version FROM system.local;', [])
-  .then(function() {
-    const query = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH replication =" +
-      "{'class': 'SimpleStrategy','replication_factor':1}";
+async function retryConnect() {	
+  client = new cassandra.Client({
+    contactPoints: ['parking-lot-db'],
+    localDataCenter: 'datacenter1',
+    queryOptions: { consistency: types.consistencies.all }
+  });
 
-    client.execute(query)
-    .then(function() {
-      const query = "use parkingLot;"
-      client.execute(query)
-      .then(function(){
-        console.log("DB connection succeeded");
-		    running = true;
-      })
-    })
-  })
-	.catch(function(err){
-		client = new cassandra.Client({
-  			contactPoints: ['parking-lot-db'],
-        localDataCenter: 'datacenter1'
-		});
-		//console.error(err);
-		console.log("DB connection failed");
-		retry--;
-		//client.shutdown();
-    setTimeout(function() {
-			if(retry > 0) retryConnect();
+  try {
+    await client.connect();
+
+    const query1 = "CREATE KEYSPACE IF NOT EXISTS parkingLot WITH replication =" +
+          "{'class': 'SimpleStrategy','replication_factor':1}";
+    await client.execute(query1);
+
+    const query2 = "use parkingLot";
+    await client.execute(query2);
+
+    console.log("DB connection succeeded");
+		running = true;
+  }
+  catch(err) {
+    console.log(err);
+    console.log("DB connection failed");
+    retry--;
+    client.shutdown();
+    setTimeout(async function() {
+			if(retry > 0) await retryConnect();
 			else {
 				console.log("DB connection failed for too many times");
 				console.log("Process exit");
 				process.exit();
 			}
     }, (retryInterval * 1000));
-	});
-	
+  }
 }
 
-
-
-app.listen(8090, function(){
+app.listen(8090, async function(){
     console.log("address is localhost:8090");
     process.on('SIGINT', function() {
-      console.log("Caught interrupt signal");
+      console.log("\n Caught interrupt signal");
           process.exit();
     });
-    retryConnect();
+    await retryConnect();
 })
  
