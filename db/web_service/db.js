@@ -86,6 +86,15 @@ app.get("/setEnableLog", function(req, res) {
   res.status(200).send("OK");
 })
 
+async function createTable(parkingLog_name, parkingInfo_name) {
+  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ' + parkingLog_name + ' (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
+  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS " + parkingInfo_name + " (licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
+  const result1 = await client.execute(create_parkingLog, [], { prepare: true });
+  if(enableLog == 2)console.log('Result1: ', result1);
+  const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
+  if(enableLog == 2)console.log('Result2: ', result2);
+}
+
 // insert vehicle info into db when entering parking lot
 async function insertObj(jsonStr) {
 
@@ -100,12 +109,7 @@ async function insertObj(jsonStr) {
     parkingInfo_name = 'parkingInfo';
   }
 
-  const create_parkingLog = 'CREATE TABLE IF NOT EXISTS ' + parkingLog_name + ' (licenseNumber varchar, vehicleType varchar, enterOrExitTime timestamp, enterOrExit int, parkingSlotType varchar, PRIMARY KEY ((licenseNumber), enterOrExitTime));';
-  const create_parkingInfo = "CREATE TABLE IF NOT EXISTS " + parkingInfo_name + " (licenseNumber varchar, parkingSlotType varchar, PRIMARY KEY (licenseNumber));";
-  const result1 = await client.execute(create_parkingLog, [], { prepare: true });
-  if(enableLog == 2)console.log('Result1: ', result1);
-  const result2 = await client.execute(create_parkingInfo, [], { prepare: true });
-  if(enableLog == 2)console.log('Result2: ', result2);
+  await createTable(parkingLog_name, parkingInfo_name);
 
   const log_query = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
   let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
@@ -139,6 +143,8 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
     parkingLog_name = 'parkingLog';
     parkingInfo_name = 'parkingInfo';
   }
+
+  await createTable(parkingLog_name, parkingInfo_name);
 
   // select the start time and the vehicle type
   const selectQuery = "select * from " + parkingLog_name + " where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
@@ -188,6 +194,8 @@ async function getObj(parking_lot_id) {
   else {
     parkingInfo_name = 'parkingInfo';
   }
+
+  await createTable(parkingLog_name, parkingInfo_name);
 
   const query = 'select * from ' + parkingInfo_name;
   const param = [];
