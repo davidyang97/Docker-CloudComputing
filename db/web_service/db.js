@@ -119,7 +119,7 @@ async function insertObj(jsonStr) {
 
   const result4 = await client.execute(lot_query, lot_param, { prepare: true });
   if(enableLog == 2)console.log('Result4: ', result4);
-
+  
   let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vehicletype]};
 
   return parkingSlotType;
@@ -172,6 +172,7 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   const deleteResult = await client.execute(deleteQuery, deleteParam, { prepare: true });
   if(enableLog == 2)console.log('DeleteResult: ', deleteResult);
 
+
   let parkingFeeObj = {'parkingfee': parkingFee};
 
   return parkingFeeObj;
@@ -194,6 +195,7 @@ async function getObj(parking_lot_id) {
 
   const resObj = await client.execute(query, param, { prepare: true });
   if(enableLog == 2)console.log(resObj);
+
   return resObj;
 
 }
@@ -207,9 +209,15 @@ app.get("/parkingInfo", async function(req, res) {
   }
 
   console.log("GET: /parkingInfo \n");
-  const resObj =  await getObj(req.query.parking_lot_id); 
-  if(enableLog >= 1)console.log('Result: ', resObj.rows);
-  res.status(200).send(resObj.rows);
+  try {
+    const resObj =  await getObj(req.query.parking_lot_id);
+    if(enableLog >= 1)console.log('Result: ', resObj.rows);
+    res.status(200).send(resObj.rows);
+  }
+  catch(err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
 })
 
 
@@ -233,9 +241,14 @@ app.post("/parkingInfo", async function(req, res) {
       return;
   }
 
-  const parkingSlotType = await insertObj(jsonStr);
-
-  res.status(200).send(parkingSlotType);
+  try {
+    const result = await insertObj(jsonStr);
+    res.status(200).send(result);
+  }
+  catch(err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
 })
 
 
@@ -253,10 +266,14 @@ app.delete("/parkingInfo", async function(req, res){
     return;
   }
 
-  let parkingFeeObj = await deleteObj(req.query.licensenumber, req.query.timestamp, req.query.parking_lot_id);
-
-  res.status(200).send(parkingFeeObj);
-
+  try {
+    let result = await deleteObj(req.query.licensenumber, req.query.timestamp, req.query.parking_lot_id);
+    res.status(200).send(result);
+  }
+  catch(err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
 })
 
 
@@ -284,21 +301,27 @@ app.post("/process", async function(req, res) {
     return;
   }
 
-  if(jsonStr.db_behavior != null && jsonStr.licensenumber != null && jsonStr.vehicletype != null && jsonStr.timestamp != null) {
-    if(jsonStr.db_behavior == true) {
-      const insert_result = await insertObj(jsonStr);
-      jsonStr.parkingslottype = insert_result.parkingslottype;
+  try {
+    if(jsonStr.db_behavior != null && jsonStr.licensenumber != null && jsonStr.vehicletype != null && jsonStr.timestamp != null) {
+      if(jsonStr.db_behavior == true) {
+        const insert_result = await insertObj(jsonStr);
+        jsonStr.parkingslottype = insert_result.parkingslottype;
+      }
+      else {
+        const delete_result = await deleteObj(jsonStr.licensenumber, jsonStr.timestamp, jsonStr.parking_lot_id);
+        jsonStr.parkingfee = delete_result.parkingfee;
+      }
     }
-    else {
-      const delete_result = await deleteObj(jsonStr.licensenumber, jsonStr.timestamp, jsonStr.parking_lot_id);
-      jsonStr.parkingfee = delete_result.parkingfee;
-    }
-  }
 
-  const result = await getObj(jsonStr.parking_lot_id);
-  jsonStr.snapshot = result.rows;
-  jsonStr.DB_success = true;
-  res.status(200).send(jsonStr);
+    const result = await getObj(jsonStr.parking_lot_id);
+    jsonStr.snapshot = result.rows;
+    jsonStr.DB_success = true;
+    res.status(200).send(jsonStr);
+  }
+  catch(err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
 })
 
 
