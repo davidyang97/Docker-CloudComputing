@@ -58,7 +58,7 @@ app.delete("/clr", async function(req, res) {
     //const tables = result.rows;
     /*const tables = await client.metadata.getTable('parkingInfo');
     console.log(tables);
-    /*tables.foreach(async function(element) {
+    /*tables.forEach(async function(element) {
       if(element != "parkingInfo" && element != "parkingLog") {
         const query = "truncate " + element; 
         await client.execute(query, []);
@@ -169,7 +169,7 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
     throw new Error("Query failed!");
   }
   let found = false;
-  snapshot.rows.foreach(function(element) {
+  snapshot.rows.forEach(function(element) {
     if(element.licensenumber == licensenumber) {
       found = true;
       break;
