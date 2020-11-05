@@ -172,7 +172,6 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   snapshot.rows.forEach(function(element) {
     if(element.licensenumber == licensenumber) {
       found = true;
-      break;
     }
   });
 
