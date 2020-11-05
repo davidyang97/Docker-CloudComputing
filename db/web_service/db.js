@@ -254,7 +254,7 @@ app.get("/parkingInfo", async function(req, res) {
   }
   catch(err) {
     console.log(err);
-    res.status(400).send(err);
+    res.status(400).send(err.message);
   }
 })
 
@@ -285,7 +285,7 @@ app.post("/parkingInfo", async function(req, res) {
   }
   catch(err) {
     console.log(err);
-    res.status(400).send(err);
+    res.status(400).send(err.message);
   }
 })
 
@@ -310,7 +310,7 @@ app.delete("/parkingInfo", async function(req, res){
   }
   catch(err) {
     console.log(err);
-    res.status(400).send(err);
+    res.status(400).send(err.message);
   }
 })
 
@@ -359,7 +359,7 @@ app.post("/process", async function(req, res) {
   catch(err) {
     console.log(err);
     jsonStr.DB_success = false;
-    jsonStr.DB_err = err;
+    jsonStr.DB_err = err.message;
     res.status(400).send(jsonStr);
   }
 })
