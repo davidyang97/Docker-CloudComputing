@@ -163,6 +163,23 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
     throw new Error("Query failed!");
   }
 
+  const snapshot = await getObj(parking_lot_id);
+  if(!snapshot.rows || snapshot.rows.length == 0) {
+    console.log("Query failed!");
+    throw new Error("Query failed!");
+  }
+  let found = false;
+  snapshot.rows.foreach(function(element) {
+    if(element.licensenumber == licensenumber) {
+      found = true;
+      break;
+    }
+  });
+
+  if(!found) {
+    console.log("Missing license number!");
+    throw new Error("Missing license number!");
+  }
 
   // calculate the start time and end time of the parking
   let startTime = Date.parse(selectResult.rows[0].enterorexittime);
