@@ -90,14 +90,38 @@ def start():
     
 
 
-
 # ENDPOINT FOR INCOMING DATA
 @app.route('/process', methods=['POST'])
 def process():
 
     # TODO: everything
 
+    # input
+    input = request.json
+    tmpData = ""
+    dependency = "none"
+    # parse the order of components
+    for flow in input['data_flow']:
+        src = flow['src']
+        dst = flow['dst']
 
+        inputData = tmpData
+        if src == "source":
+            inputData = input['data']
+
+        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']][port] + '/process', json=inputData)
+
+        if dependency == "none": # overwrite previous results with new ones
+            tmpData = result
+        elif dependency == "split": # update previous results with new ones
+            tmpData.update(result)
+        else: # ignore multiple combines
+            if flow['dependency'] != "combine": # update results from component after last combine
+                tmpData = result
+
+        dependency = flow['dependency']
+
+    return tmpData['output'] 
     # OLD CODE:
     # # Image sent as part of request from client
     # img = request.files['file']
@@ -129,7 +153,7 @@ def process():
     # # Return output display to client
     # message = now + ": " + vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
     # return message + chart_display
-    return(True)
+    #return(True)
 
 
 
