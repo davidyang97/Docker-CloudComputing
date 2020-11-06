@@ -6,6 +6,58 @@ import math
 import base64
 import argparse
 
+# Specifications for data flows
+DATA_FLOW_ENTER = [
+            {
+                "src":"source",
+                "dst":"plate-recognizer",
+                "dependency":"split"
+            },
+            {
+                "src":"source",
+                "dst":"vtype-recognizer",
+                "dependency":"split"
+            },
+            {
+                "src":"plate-recognizer",
+                "dst":"web-service",
+                "dependency":"combine"
+            },
+            {
+                "src":"vtype-recognizer",
+                "dst":"web-service",
+                "dependency":"combine"
+            },
+            {
+                "src":"web-service",
+                "dst":"display-creator",
+                "dependency":"none"
+            }
+        ]
+
+DATA_FLOW_EXIT = [
+            {
+                "src":"source",
+                "dst":"plate-recognizer",
+                "dependency":"none"
+            },
+            {
+                "src":"plate-recognizer",
+                "dst":"web-service",
+                "dependency":"combine"
+            },
+            {
+                "src":"vtype-recognizer",
+                "dst":"web-service",
+                "dependency":"combine"
+            },
+            {
+                "src":"web-service",
+                "dst":"display-creator",
+                "dependency":"none"
+            }
+        ]
+
 
 def sim_inter_event_time(l):
     """The inter-event time for a Poisson process is modeled with an
@@ -24,6 +76,8 @@ def sim_inter_event_time(l):
     inter_event_time = -math.log(1.0-p)/l
     return inter_event_time
 
+##############################################################
+
 
 # Create command line parser
 parser = argparse.ArgumentParser(description='Generate data for a parking lot')
@@ -33,20 +87,20 @@ parser.add_argument('--lot', help='The parking lot id', default=1, type=int)
 parser.add_argument('--url', help='The base URL of the workflow manager', 
                     default='http://cluster3-1.utdallas.edu')
 parser.add_argument('--lambda', help='The Poisson rate parameter (avg vehicles per sec)', 
-                    type=float, default=2.0, dest='lambd')
+                    type=float, default=0.5, dest='lambd')
 
 
 # Parse arguments
 args = parser.parse_args()
 
 
-# Set DB behavior flag and services list according to desired workflow
+# Set DB behavior flag and data flow spec according to desired workflow
 if args.behavior == 'enter':
     db_behavior = True
-    services = ['plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']
+    data_flow = DATA_FLOW_ENTER
 else:
-    db_behiavior = False
-    services = ['plate-recognizer', 'web-service', 'display-creator']
+    db_behavior = False
+    data_flow = DATA_FLOW_EXIT
 
 
 # Append '/process' to the url
@@ -60,16 +114,19 @@ else:
 directory = './photos/'
 for filename in os.listdir(directory):
     if filename.endswith(".jpg"):
-        # Create JSON object
-        data = {"services": services,
-                "db_behavior": db_behavior,
+        # Create Data
+        data = {"db_behavior": db_behavior,
                 "parking_lot_id": args.lot}
         with open(directory + filename, "rb") as img_file:
-            data['img'] = base64.b64encode(img_file.read())
+            img_base64 = base64.b64encode(img_file.read())
+        data['img'] = img_base64.decode('utf-8')
+
+        wf_input = {"data_flow": data_flow,
+                    "data": data}
 
         # Send request and print response
         print('\nDetected vehicle...')
-        response = requests.post(url, data=data)
+        response = requests.post(url, json=wf_input)
         print(response.json()['display'])
 
         # Wait for next Poisson event
