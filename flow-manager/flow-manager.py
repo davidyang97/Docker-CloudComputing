@@ -46,7 +46,7 @@ def start():
     # Keep this solution in place until we solve shared volume problem
     try:
         parking_lot_db = client.containers.get('parking-lot-db')
-        parking_lot_db.restart()
+        parking_lot_db.start()
     except:
         mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
         parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
