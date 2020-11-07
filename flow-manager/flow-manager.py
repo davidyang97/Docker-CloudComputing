@@ -109,7 +109,7 @@ def process():
         if src == "source":
             inputData = input['data']
 
-        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']][port] + '/process', json=inputData)
+        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
 
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result
