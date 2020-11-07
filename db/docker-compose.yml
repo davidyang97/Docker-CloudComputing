@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:  
+ 
+  cassandra-001:
+    image: cassandra:latest
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: cassandra-001
+      CASSANDRA_SEEDS: cassandra-001
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 80s
+         
+  cassandra-002:
+    image: cassandra:latest
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: cassandra-002
+      CASSANDRA_SEEDS: cassandra-001
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 5
+        window: 80s
+    depends_on:
+      - cassandra-001
+      
+  cassandra-003:
+    image: cassandra:latest
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: cassandra-003
+      CASSANDRA_SEEDS: cassandra-001
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 5
+        window: 80s
+    depends_on:
+      - cassandra-002
+
+networks:
+  default:
+    external:
+      name: parking-lot-net
