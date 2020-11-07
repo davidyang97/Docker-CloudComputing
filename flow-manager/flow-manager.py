@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:latest', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:2.0', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:latest', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.0', 'port': '5000'}}
@@ -62,6 +62,7 @@ def start():
             service = client.services.create(SERVICE_PARAMS[service_name]['image'], name=service_name,
                 networks=['parking-lot-net'])
         service.scale(NUM_REPLICAS)
+        print(service_name)
 
 
 
