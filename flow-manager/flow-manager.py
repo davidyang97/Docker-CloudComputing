@@ -46,7 +46,8 @@ def start():
     # Keep this solution in place until we solve shared volume problem
     try:
         parking_lot_db = client.containers.get('parking-lot-db')
-    except docker.errors.NotFound:
+        parking_lot_db.restart()
+    except:
         mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
         parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
             detach=True, network='parking-lot-net', mounts=[mount])
@@ -109,7 +110,7 @@ def process():
         if src == "source":
             inputData = input['data']
 
-        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData).json()
 
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result

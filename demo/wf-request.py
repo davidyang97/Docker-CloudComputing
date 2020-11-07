@@ -28,7 +28,7 @@ else:
     url = args.url + '/start'
 
 
-data = {'services':['plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']}
+data = {'services': services}
 
 
 # start requested workflow
