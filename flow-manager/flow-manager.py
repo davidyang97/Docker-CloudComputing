@@ -88,7 +88,13 @@ def start():
 
     return jsonify(success=False, message='Max retries exceeded')
 
-    
+
+# ENDPOINT TO STOP AND REMOVE ALL SERVICES
+@app.route('/stop-all', methods=['GET'])
+def stop_all():
+    for service in client.services.list():
+        service.remove()
+    return "all services stopped"
 
 
 # ENDPOINT FOR INCOMING DATA
