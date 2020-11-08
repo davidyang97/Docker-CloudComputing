@@ -344,18 +344,21 @@ app.post("/process", async function(req, res) {
       if(jsonStr.db_behavior != null && jsonStr.plate != null && jsonStr.vtype != null && jsonStr.timestamp != null) {
         const insert_result = await insertObj(jsonStr);
         jsonStr.parkingslottype = insert_result.parkingslottype;
+        jsonStr.operation = "Insert";
       }
     }
     else {
       if(jsonStr.db_behavior != null && jsonStr.plate != null && jsonStr.timestamp != null) {
         const delete_result = await deleteObj(jsonStr.plate, jsonStr.timestamp, jsonStr.parking_lot_id);
         jsonStr.parkingfee = delete_result.parkingfee;
+        jsonStr.operation = "Delete"
       }
     }
-
+    
     const result = await getObj(jsonStr.parking_lot_id);
     jsonStr.snapshot = result.rows;
     jsonStr.DB_success = true;
+    if(jsonStr.operation == null) jsonStr.operation = "Query";
     res.status(200).send(jsonStr);
   }
   catch(err) {

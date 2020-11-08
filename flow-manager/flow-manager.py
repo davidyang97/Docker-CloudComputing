@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.2', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.3', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.0', 'port': '5000'}}
@@ -122,7 +122,7 @@ def process():
         inputData = tmpData
         if src == "source":
             inputData = input['data']
-        print("sending request to " + flow['dst'], flush=True)
+        print("sending request from " + flow['src'] + " to " + flow['dst'], flush=True)
         result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
         # print(result, flush=True)
         result = result.json()
@@ -133,8 +133,6 @@ def process():
         else: # ignore multiple combines
             if flow['dependency'] != "combine": # update results from component after last combine
                 tmpData = result
-        print(flow['dst'], flush=True)
-        # print(tmpData, flush=True)
         dependency = flow['dependency']
     
     result = {'display', tmpData['display']}
