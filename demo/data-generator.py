@@ -121,6 +121,7 @@ for filename in os.listdir(directory):
         data = {"db_behavior": db_behavior,
                 "parking_lot_id": args.lot,
                 "timestamp": now}
+        print("Filename: " + filename)
         with open(directory + filename, "rb") as img_file:
             img_base64 = base64.b64encode(img_file.read())
         data['img'] = img_base64.decode('utf-8')
