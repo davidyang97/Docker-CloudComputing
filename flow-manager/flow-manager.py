@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.1', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.2', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.0', 'port': '5000'}}
