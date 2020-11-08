@@ -134,7 +134,7 @@ def process():
             if flow['dependency'] != "combine": # update results from component after last combine
                 tmpData = result
         print(flow['dst'], flush=True)
-        print(tmpData, flush=True)
+        # print(tmpData, flush=True)
         dependency = flow['dependency']
     
     result = {'display', tmpData['display']}
