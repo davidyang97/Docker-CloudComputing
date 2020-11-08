@@ -35,12 +35,12 @@ Nodejs Web Service
 - Insert the vehicle information when entering parking lot and return the corresponding parking slot type and the current snapshot
 ```
 	curl -X POST -H "Content-Type: application/json" \
-    	-d '{"licensenumber": "AAA1234", "vehicletype": "car", "timestamp":"2019-09-09 12:12:12", "parking_lot_id":"0", "db_behavior":true}' \
+    	-d '{"plate": "AAA1234", "vtype": "car", "timestamp":"2019-09-09 12:12:12", "parking_lot_id":"0", "db_behavior":true}' \
 	localhost:8090/process
 ```
 - Delete the vehicle information and return the parking fee
 ```
 	curl -X POST -H "Content-Type: application/json" \
-    	-d '{"licensenumber": "AAA1234", "vehicletype": "car", "timestamp":"2019-09-09 16:12:12", "parking_lot_id":"0", "db_behavior":false}' \
+    	-d '{"plate": "AAA1234", "vtype": "car", "timestamp":"2019-09-09 16:12:12", "parking_lot_id":"0", "db_behavior":false}' \
 	localhost:8090/process
 ```
