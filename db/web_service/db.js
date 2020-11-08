@@ -118,18 +118,18 @@ async function insertObj(jsonStr) {
   await createTable(parkingLog_name, parkingInfo_name);
 
   const log_query = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let log_param = [jsonStr.licensenumber, jsonStr.vehicletype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+  let log_param = [jsonStr.plate, jsonStr.vtype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
 
   const result3 = await client.execute(log_query, log_param, { prepare: true });
   if(enableLog == 2)console.log('Result3: ', result3);
 
   const lot_query = 'insert into ' + parkingInfo_name  + ' (licenseNumber, parkingSlotType) values (?, ?)';
-  let lot_param = [jsonStr.licensenumber, typeMapping[jsonStr.vehicletype]];
+  let lot_param = [jsonStr.plate, typeMapping[jsonStr.vtype]];
 
   const result4 = await client.execute(lot_query, lot_param, { prepare: true });
   if(enableLog == 2)console.log('Result4: ', result4);
   
-  let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vehicletype]};
+  let parkingSlotType = {'parkingslottype': typeMapping[jsonStr.vtype]};
 
   return parkingSlotType;
 
@@ -299,13 +299,13 @@ app.delete("/parkingInfo", async function(req, res){
 
   console.log("DELETE: /parkingInfo \n", req.query);
 
-  if(req.query.licensenumber == null || req.query.timestamp == null) {
+  if(req.query.plate == null || req.query.timestamp == null) {
     res.status(400).send("missing parameter");
     return;
   }
 
   try {
-    let result = await deleteObj(req.query.licensenumber, req.query.timestamp, req.query.parking_lot_id);
+    let result = await deleteObj(req.query.plate, req.query.timestamp, req.query.parking_lot_id);
     res.status(200).send(result);
   }
   catch(err) {
@@ -340,13 +340,13 @@ app.post("/process", async function(req, res) {
   }
 
   try {
-    if(jsonStr.db_behavior != null && jsonStr.licensenumber != null && jsonStr.vehicletype != null && jsonStr.timestamp != null) {
+    if(jsonStr.db_behavior != null && jsonStr.plate != null && jsonStr.vtype != null && jsonStr.timestamp != null) {
       if(jsonStr.db_behavior == true) {
         const insert_result = await insertObj(jsonStr);
         jsonStr.parkingslottype = insert_result.parkingslottype;
       }
       else {
-        const delete_result = await deleteObj(jsonStr.licensenumber, jsonStr.timestamp, jsonStr.parking_lot_id);
+        const delete_result = await deleteObj(jsonStr.plate, jsonStr.timestamp, jsonStr.parking_lot_id);
         jsonStr.parkingfee = delete_result.parkingfee;
       }
     }

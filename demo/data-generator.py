@@ -1,5 +1,6 @@
 import requests
 from time import sleep
+from datetime import datetime
 import os
 import random
 import math
@@ -10,12 +11,12 @@ import argparse
 DATA_FLOW_ENTER = [
             {
                 "src":"source",
-                "dst":"plate-recognizer",
+                "dst":"vtype-recognizer",
                 "dependency":"split"
             },
             {
                 "src":"source",
-                "dst":"vtype-recognizer",
+                "dst":"plate-recognizer",
                 "dependency":"split"
             },
             {
@@ -114,9 +115,12 @@ else:
 directory = './photos/'
 for filename in os.listdir(directory):
     if filename.endswith(".jpg"):
+        # create timestamp
+        now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         # Create Data
         data = {"db_behavior": db_behavior,
-                "parking_lot_id": args.lot}
+                "parking_lot_id": args.lot,
+                "timestamp": now}
         with open(directory + filename, "rb") as img_file:
             img_base64 = base64.b64encode(img_file.read())
         data['img'] = img_base64.decode('utf-8')
