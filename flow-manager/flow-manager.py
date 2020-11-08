@@ -124,7 +124,7 @@ def process():
             inputData = input['data']
         print("sending request to " + flow['dst'], flush=True)
         result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
-        print(result, flush=True)
+        # print(result, flush=True)
         result = result.json()
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result
