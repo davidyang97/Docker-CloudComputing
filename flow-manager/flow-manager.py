@@ -37,7 +37,7 @@ app = Flask(__name__)
 # ENDPOINT FOR WORKFLOW REQUEST
 @app.route('/start', methods=['POST'])
 def start():
-
+    print("/start\n", flush=True)
     # Get a dictionary of services currently running on the swarm
     existing_services = {service.name:service.id for service in client.services.list()}
 
@@ -51,18 +51,20 @@ def start():
         mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
         parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
             detach=True, network='parking-lot-net', mounts=[mount])
-
+    print("created parking-lot-db\n", flush=True)
 
     # Start requested services (if necessary) and scale them
     for service_name in request.json['services']:
         name = SERVICE_PARAMS[service_name]['image']
+        print(service_name + " creating", flush=True)
         if service_name in existing_services:
             service = client.services.get(existing_services[service_name])
         else:
             service = client.services.create(SERVICE_PARAMS[service_name]['image'], name=service_name,
                 networks=['parking-lot-net'])
-        service.scale(NUM_REPLICAS)
-        print(service_name)
+        # service.reload()
+        # service.scale(NUM_REPLICAS)
+        print(service_name + " created", flush=True)
 
 
 
@@ -75,6 +77,7 @@ def start():
 
         try:
             for service_name in request.json['services']:
+                print("attempting to check " + service_name, flush=True)
                 port = SERVICE_PARAMS[service_name]['port']
                 url = 'http://' + service_name + ':' + port + '/is-alive'
                 if not requests.get(url).json()['alive']:
@@ -106,6 +109,8 @@ def process():
 
     # input
     input = request.json
+    # print("request.json", flush=True)
+    # print(input, flush=True)
     tmpData = ""
     dependency = "none"
     # parse the order of components
@@ -116,9 +121,10 @@ def process():
         inputData = tmpData
         if src == "source":
             inputData = input['data']
-
-        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData).json()
-
+        print("sending request to " + flow['dst'], flush=True)
+        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+        print(result, flush=True)
+        result = result.json()
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result
         elif dependency == "split": # update previous results with new ones
@@ -126,7 +132,8 @@ def process():
         else: # ignore multiple combines
             if flow['dependency'] != "combine": # update results from component after last combine
                 tmpData = result
-
+        print(flow['dst'], flush=True)
+        print(tmpData, flush=True)
         dependency = flow['dependency']
 
     return tmpData['output'] 
