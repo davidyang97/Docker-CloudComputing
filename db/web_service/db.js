@@ -118,7 +118,7 @@ async function insertObj(jsonStr) {
   await createTable(parkingLog_name, parkingInfo_name);
 
   const log_query = 'insert into ' + parkingLog_name + ' (licenseNumber, vehicleType, enterOrExitTime, enterOrExit, parkingSlotType) values (?, ?, ?, ?, ?)';
-  let log_param = [jsonStr.plate, jsonStr.vtype, jsonStr.timestamp, 0, typeMapping[jsonStr.vehicletype]];
+  let log_param = [jsonStr.plate, jsonStr.vtype, jsonStr.timestamp, 0, typeMapping[jsonStr.vtype]];
 
   const result3 = await client.execute(log_query, log_param, { prepare: true });
   if(enableLog == 2)console.log('Result3: ', result3);
