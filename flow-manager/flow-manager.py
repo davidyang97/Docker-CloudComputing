@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:2.0', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.1', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.0', 'port': '5000'}}
@@ -82,6 +82,7 @@ def start():
                 url = 'http://' + service_name + ':' + port + '/is-alive'
                 if not requests.get(url).json()['alive']:
                     ready = False
+                    print(service_name + " connection failed", flush=True)
             if ready:
                 return jsonify(success=True)
         except:
@@ -135,8 +136,10 @@ def process():
         print(flow['dst'], flush=True)
         print(tmpData, flush=True)
         dependency = flow['dependency']
+    
+    result = {'display', tmpData['display']}
 
-    return tmpData['output'] 
+    return jsonify(display=tmpData['display']) 
     # OLD CODE:
     # # Image sent as part of request from client
     # img = request.files['file']
