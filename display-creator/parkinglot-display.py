@@ -40,6 +40,9 @@ def process():
 
     output = ''
 
+    if 'timestamp' in request.json:
+        output += request.json['timestamp'] + '\n'
+        
     if 'vtype' in request.json:
         output += request.json['vtype'] + ' '
     else:
