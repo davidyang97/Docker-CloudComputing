@@ -1,5 +1,5 @@
 import requests
-from time import sleep
+import time
 from datetime import datetime
 import os
 import random
@@ -111,6 +111,8 @@ else:
     url = args.url + '/process'
 
 
+elapsed_times = []
+
 # Data generation
 directory = './photos/'
 for filename in os.listdir(directory):
@@ -129,12 +131,30 @@ for filename in os.listdir(directory):
         wf_input = {"data_flow": data_flow,
                     "data": data}
 
-        # Send request and print response
+        # Send request and time it
         print('\nDetected vehicle...')
+        start_time = time.perf_counter()
         response = requests.post(url, json=wf_input)
-        print(response.json()['display'])
+        finish_time = time.perf_counter()
+
+        # Print response 
+        try:
+            print(response.json()['display'])
+        except:
+            print('Workflow returned an error: ')
+            print(response.text)
+
+        # Print and save processing time
+        elapsed_time = finish_time - start_time
+        elapsed_times.append(elapsed_time)
+        print('Processed in ' + str(elapsed_time) + ' sec')
+
+        # Divider
+        print('----------------------------------------------------------\n')
 
         # Wait for next Poisson event
-        sleep(sim_inter_event_time(args.lambd))
+        time.sleep(sim_inter_event_time(args.lambd))
     else:
         continue
+
+print('Average time: ', sum(elapsed_times)/len(elapsed_times), 'sec')
