@@ -1,6 +1,6 @@
 import requests
 import argparse
-
+import time
 
 # Create command line parser
 parser = argparse.ArgumentParser(description='Generate data for a parking lot')
@@ -32,11 +32,14 @@ data = {'services': services}
 
 
 # start requested workflow
-start_response = requests.post(url, json=data).json()
+start_time = time.perf_counter()
+response = requests.post(url, json=data).json()
+finish_time = time.perf_counter()
 
-if start_response['success']:
-	print('Workflow Deployed')
+elapsed_time = finish_time - start_time
+if response['success']:
+	print('Workflow deployed in ' + str(elapsed_time) + ' sec')
 else:
-	print('Error Deploying Workflow: ' + start_response['message'])
+	print('Error Deploying Workflow: ' + response['message'])
 
 
