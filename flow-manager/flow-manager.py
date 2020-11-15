@@ -16,7 +16,7 @@ DB_REPLICAS = 3 # Number of replicas of Cassandra
 
 NUM_REPLICAS = 1  # Number of replicas to deploy of the services
 
-SLEEP_TIME = 3 # Sleep time when waiting for services deployment
+SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
 SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
 
@@ -103,7 +103,7 @@ def start():
             # service.scale(NUM_REPLICAS)
             print(service_name + " " + image_name + " created", flush=True)
     end_time = time.perf_counter()
-    print('Services deployment finished in ' + str(end_time - start_time) + ' sec')
+    print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
 
 
     # Confirm that all services are ready before returning success method to client
