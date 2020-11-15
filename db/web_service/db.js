@@ -4,6 +4,8 @@ const { types } = cassandra;
 var express = require('express');
 var app = express();
 
+var DB_NAME = 'cassandra-001'
+
 var cors = require('cors');
 
 app.use(cors());
@@ -373,7 +375,7 @@ app.post("/process", async function(req, res) {
 
 async function retryConnect() {	
   client = new cassandra.Client({
-    contactPoints: ['parking-lot-db'],
+    contactPoints: [DB_NAME],
     localDataCenter: 'datacenter1',
     queryOptions: { consistency: types.consistencies.all }
   });

@@ -47,13 +47,6 @@ DATA_FLOW_EXIT = [
                 "dst":"web-service",
                 "dependency":"combine"
             },
-            '''
-            {
-                "src":"vtype-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            '''
             {
                 "src":"web-service",
                 "dst":"display-creator",
