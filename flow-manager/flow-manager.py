@@ -8,10 +8,14 @@ from datetime import datetime
 SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.3', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
-                 'display-creator': {'image': 'alexneal/parkinglot-display:v2.1', 'port': '5000'}}
+                 'display-creator': {'image': 'alexneal/parkinglot-display:v2.1', 'port': '5000'},
+                 'cassandra': {'image': 'cassandra:latest'}}
+
+DB_REPLICAS = 3 # Number of replicas of Cassandra
 
 NUM_REPLICAS = 1  # Number of replicas to deploy of the services
 
+SLEEP_TIME = 3 # Sleep time when waiting for services deployment
 
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
@@ -42,6 +46,7 @@ def start():
     existing_services = {service.name:service.id for service in client.services.list()}
 
 
+    '''
     # TEMPORARY SOLUTION: Cassandra is standalone container on manager node
     # Keep this solution in place until we solve shared volume problem
     try:
@@ -52,19 +57,47 @@ def start():
         parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
             detach=True, network='parking-lot-net', mounts=[mount])
     print("created parking-lot-db\n", flush=True)
+    '''
 
     # Start requested services (if necessary) and scale them
     for service_name in request.json['services']:
-        name = SERVICE_PARAMS[service_name]['image']
-        print(service_name + " creating", flush=True)
-        if service_name in existing_services:
-            service = client.services.get(existing_services[service_name])
-        else:
-            service = client.services.create(SERVICE_PARAMS[service_name]['image'], name=service_name,
-                networks=['parking-lot-net'])
-        # service.reload()
-        # service.scale(NUM_REPLICAS)
-        print(service_name + " created", flush=True)
+        image_name = SERVICE_PARAMS[service_name]['image']
+
+        if service_name == 'cassandra':
+            if 'cassandra-001' not in existing_services:
+                # Create seed node
+                print('cassandra-001' + " creating", flush=True)
+
+                service = client.services.create(image_name, name='cassandra-001',
+                    env=['CASSANDRA_BROADCAST_ADDRESS=cassandra-001'], networks=['parking-lot-net'],
+                    constraints=['node.hostname==cluster3-1.utdallas.edu'])
+
+                print('cassandra-001' + " created", flush=True)
+
+                # Create the rest of the nodes and let them point to the seed node
+                for i in range(1, DB_REPLICAS + 1):
+
+                    DB_name = 'cassandra-00' + str(i)
+                    DB_env = 'CASSANDRA_BROADCAST_ADDRESS=' + DB_name
+                    DB_constraint = 'node.hostname==cluster3-' + str(i) + '.utdallas.edu'
+
+                    print(DB_name + " creating", flush=True)
+
+                    service = client.services.create(image_name, name=DB_name,
+                        env=[DB_env, 'CASSANDRA_SEEDS=cassandra-001'], networks=['parking-lot-net'],
+                        constraints=[DB_constraint])
+
+                    print(DB_name + " created", flush=True)
+        else: 
+            print(service_name + " creating", flush=True)
+            if service_name in existing_services:
+                service = client.services.get(existing_services[service_name])
+            else:
+                service = client.services.create(image_name, name=service_name,
+                    networks=['parking-lot-net'])
+            # service.reload()
+            # service.scale(NUM_REPLICAS)
+            print(service_name + " created", flush=True)
 
 
 
@@ -77,19 +110,20 @@ def start():
 
         try:
             for service_name in request.json['services']:
-                print("attempting to check " + service_name, flush=True)
-                port = SERVICE_PARAMS[service_name]['port']
-                url = 'http://' + service_name + ':' + port + '/is-alive'
-                if not requests.get(url).json()['alive']:
-                    ready = False
-                    print(service_name + " connection failed", flush=True)
+                if service_name != 'cassandra':
+                    print("attempting to check " + service_name, flush=True)
+                    port = SERVICE_PARAMS[service_name]['port']
+                    url = 'http://' + service_name + ':' + port + '/is-alive'
+                    if not requests.get(url).json()['alive']:
+                        ready = False
+                        print(service_name + " connection failed", flush=True)
             if ready:
                 return jsonify(success=True)
         except:
             print('Failed to establish connection to a service. Trying again...')
 
         attempt +=1
-        sleep(2)
+        sleep(SLEEP_TIME)
 
     return jsonify(success=False, message='Max retries exceeded')
 
