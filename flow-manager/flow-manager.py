@@ -102,8 +102,8 @@ def start():
             # service.reload()
             # service.scale(NUM_REPLICAS)
             print(service_name + " " + image_name + " created", flush=True)
-    end_time = time.perf_counter()
-    print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
+    # end_time = time.perf_counter()
+    # print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
 
 
     # Confirm that all services are ready before returning success method to client
@@ -123,6 +123,8 @@ def start():
                         ready = False
                         print(service_name + " connection failed", flush=True)
             if ready:
+                available_time = time.perf_counter()
+                print('Services are available in ' + str(available_time - start_time) + ' sec', flush=True)
                 return jsonify(success=True)
         except:
             print('Failed to establish connection to a service. Trying again...')
