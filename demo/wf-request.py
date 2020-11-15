@@ -16,9 +16,9 @@ args = parser.parse_args()
 
 # Create services list according to desired workflow
 if args.behavior == 'enter':
-    services = ['plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']
+    services = ['cassandra', 'plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']
 else:
-    services = ['plate-recognizer', 'web-service', 'display-creator']
+    services = ['cassandra', 'plate-recognizer', 'web-service', 'display-creator']
 
 
 # Append '/start' to the url
