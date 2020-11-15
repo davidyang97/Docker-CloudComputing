@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.3', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.4', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.1', 'port': '5000'},
@@ -92,7 +92,7 @@ def start():
 
                     print(DB_name + " created", flush=True)
         else: 
-            print(service_name + " creating", flush=True)
+            print(service_name + " " + image_name + " creating", flush=True)
             if service_name in existing_services:
                 service = client.services.get(existing_services[service_name])
             else:
@@ -100,7 +100,7 @@ def start():
                     networks=['parking-lot-net'])
             # service.reload()
             # service.scale(NUM_REPLICAS)
-            print(service_name + " created", flush=True)
+            print(service_name + " " + image_name + " created", flush=True)
 
 
 
