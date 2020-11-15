@@ -103,7 +103,7 @@ def start():
             # service.scale(NUM_REPLICAS)
             print(service_name + " " + image_name + " created", flush=True)
     end_time = time.perf_counter()
-    print('Services deployment finished in ' + str(elapsed_time) + ' sec')
+    print('Services deployment finished in ' + str(end_time - start_time) + ' sec')
 
 
     # Confirm that all services are ready before returning success method to client
