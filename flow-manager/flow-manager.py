@@ -17,6 +17,8 @@ NUM_REPLICAS = 1  # Number of replicas to deploy of the services
 
 SLEEP_TIME = 3 # Sleep time when waiting for services deployment
 
+SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
+
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
 
@@ -64,27 +66,28 @@ def start():
         image_name = SERVICE_PARAMS[service_name]['image']
 
         if service_name == 'cassandra':
-            if 'cassandra-001' not in existing_services:
+            if SEED_NAME not in existing_services:
                 # Create seed node
-                print('cassandra-001' + " creating", flush=True)
+                print(SEED_NAME + " creating", flush=True)
 
-                service = client.services.create(image_name, name='cassandra-001',
-                    env=['CASSANDRA_BROADCAST_ADDRESS=cassandra-001'], networks=['parking-lot-net'],
+                service = client.services.create(image_name, name=SEED_NAME,
+                    env=['CASSANDRA_BROADCAST_ADDRESS=' + SEED_NAME], networks=['parking-lot-net'],
                     constraints=['node.hostname==cluster3-1.utdallas.edu'])
 
-                print('cassandra-001' + " created", flush=True)
+                print(SEED_NAME + " created", flush=True)
 
                 # Create the rest of the nodes and let them point to the seed node
-                for i in range(1, DB_REPLICAS + 1):
+                for i in range(1, DB_REPLICAS):
+                    j = ( i % 3 ) + 1
 
                     DB_name = 'cassandra-00' + str(i)
                     DB_env = 'CASSANDRA_BROADCAST_ADDRESS=' + DB_name
-                    DB_constraint = 'node.hostname==cluster3-' + str(i) + '.utdallas.edu'
+                    DB_constraint = 'node.hostname==cluster3-' + str(j) + '.utdallas.edu'
 
                     print(DB_name + " creating", flush=True)
 
                     service = client.services.create(image_name, name=DB_name,
-                        env=[DB_env, 'CASSANDRA_SEEDS=cassandra-001'], networks=['parking-lot-net'],
+                        env=[DB_env, 'CASSANDRA_SEEDS=' + SEED_NAME], networks=['parking-lot-net'],
                         constraints=[DB_constraint])
 
                     print(DB_name + " created", flush=True)
