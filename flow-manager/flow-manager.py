@@ -80,7 +80,7 @@ def start():
                 for i in range(1, DB_REPLICAS):
                     j = ( i % 3 ) + 1
 
-                    DB_name = 'cassandra-00' + str(i)
+                    DB_name = 'cassandra-00' + str(j)
                     DB_env = 'CASSANDRA_BROADCAST_ADDRESS=' + DB_name
                     DB_constraint = 'node.hostname==cluster3-' + str(j) + '.utdallas.edu'
 
