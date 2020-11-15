@@ -3,6 +3,7 @@ import docker
 import base64
 import requests
 from time import sleep
+import time
 from datetime import datetime
 
 SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.4', 'port': '8090'},
@@ -60,7 +61,7 @@ def start():
             detach=True, network='parking-lot-net', mounts=[mount])
     print("created parking-lot-db\n", flush=True)
     '''
-
+    start_time = time.perf_counter()
     # Start requested services (if necessary) and scale them
     for service_name in request.json['services']:
         image_name = SERVICE_PARAMS[service_name]['image']
@@ -101,7 +102,8 @@ def start():
             # service.reload()
             # service.scale(NUM_REPLICAS)
             print(service_name + " " + image_name + " created", flush=True)
-
+    end_time = time.perf_counter()
+    print('Services deployment finished in ' + str(elapsed_time) + ' sec')
 
 
     # Confirm that all services are ready before returning success method to client
