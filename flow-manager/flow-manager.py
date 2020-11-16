@@ -57,7 +57,7 @@ def start():
     lot_id = request.json['parking_lot_id']
     lot_map[lot_id] = {}
     lot_map[lot_id]['reuse'] = request.json['reuse']
-    # Could add data flow spec e.g. lot_map[lot_id]['data_flow'] = request.json['data_flow']
+    lot_map[lot_id]['data_flow'] = request.json['data_flow']
 
 
     start_time = time.perf_counter()
@@ -166,7 +166,7 @@ def process():
     tmpData = ""
     dependency = "none"
     # parse the order of components
-    for flow in input['data_flow']:
+    for flow in lot_map[lot_id]['data_flow']:
         src = flow['src']
         dst = flow['dst']
 

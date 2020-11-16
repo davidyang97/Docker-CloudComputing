@@ -7,53 +7,6 @@ import math
 import base64
 import argparse
 
-# Specifications for data flows
-DATA_FLOW_ENTER = [
-            {
-                "src":"source",
-                "dst":"vtype-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"vtype-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
-
-DATA_FLOW_EXIT = [
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"none"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
-
 
 def sim_inter_event_time(l):
     """The inter-event time for a Poisson process is modeled with an
@@ -84,9 +37,7 @@ parser.add_argument('--url', help='The base URL of the workflow manager',
                     default='http://cluster3-1.utdallas.edu')
 parser.add_argument('--lambda', help='The Poisson rate parameter (avg vehicles per sec)', 
                     type=float, default=0.5, dest='lambd')
-#parser.add_argument('--reuse', dest='reuse', action='store_true')
-#parser.add_argument('--no-reuse', dest='reuse', action='store_false')
-#parser.set_defaults(reuse=True)
+
 
 # Parse arguments
 args = parser.parse_args()
