@@ -21,6 +21,10 @@ SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
 SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
 
+# Global dict mapping lot id to reuse flag
+lot_map = {}
+
+
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
 
@@ -49,19 +53,12 @@ def start():
     # Get a dictionary of services currently running on the swarm
     existing_services = {service.name:service.id for service in client.services.list()}
 
+    # Store reuse flag for this client's workflow
+    lot_id = request.json['parking_lot_id']
+    lot_map[lot_id] = {}
+    lot_map[lot_id]['reuse'] = request.json['reuse']
+    # Can store additional client-related data in this dict
 
-    '''
-    # TEMPORARY SOLUTION: Cassandra is standalone container on manager node
-    # Keep this solution in place until we solve shared volume problem
-    try:
-        parking_lot_db = client.containers.get('parking-lot-db')
-        parking_lot_db.start()
-    except:
-        mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
-        parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
-            detach=True, network='parking-lot-net', mounts=[mount])
-    print("created parking-lot-db\n", flush=True)
-    '''
     start_time = time.perf_counter()
     # Start requested services (if necessary) and scale them
     for service in request.json['services']:
@@ -97,14 +94,16 @@ def start():
 
                     print(DB_name + " created", flush=True)
         else: 
+            if not request.json['reuse']: # Append lot ID if reuse is not desired
+                service_name = service_name + str(request.json['parking_lot_id'])
+
             print(service_name + " " + image_name + " creating", flush=True)
             if service_name in existing_services:
                 service = client.services.get(existing_services[service_name])
             else:
                 service = client.services.create(image_name, name=service_name,
                     networks=['parking-lot-net'], mode=service_mode)
-            # service.reload()
-            # service.scale(NUM_REPLICAS)
+
             print(service_name + " " + image_name + " created", flush=True)
     end_time = time.perf_counter()
     print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
@@ -121,8 +120,12 @@ def start():
             for service in request.json['services']:
                 service_name = service['name']
                 if service_name != 'cassandra':
-                    print("attempting to check " + service_name, flush=True)
                     port = SERVICE_PARAMS[service_name]['port']
+
+                    if not request.json['reuse']: # Append lot id if non-reuse case
+                        service_name = service_name + str(request.json['parking_lot_id'])
+
+                    print("attempting to check " + service_name, flush=True)
                     url = 'http://' + service_name + ':' + port + '/is-alive'
                     if not requests.get(url).json()['alive']:
                         ready = False
@@ -152,24 +155,35 @@ def stop_all():
 @app.route('/process', methods=['POST'])
 def process():
 
-    # TODO: everything
+    lot_id = request.json['data']['parking_lot_id'] 
+    if lot_id not in lot_map:
+        return "Client has not yet requested a workflow"
 
     # input
     input = request.json
+    
     # print("request.json", flush=True)
     # print(input, flush=True)
     tmpData = ""
     dependency = "none"
     # parse the order of components
-    for flow in input['data_flow']:
+    for flow in request.json['data_flow']:
         src = flow['src']
         dst = flow['dst']
 
         inputData = tmpData
         if src == "source":
             inputData = input['data']
-        print("sending request from " + flow['src'] + " to " + flow['dst'], flush=True)
-        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+
+
+        if not lot_map[lot_id]['reuse']: # Append lot id if client's config is non-reuse
+            if src != "source":
+                src = src + str(lot_id)
+            dst = dst + str(lot_id)
+
+
+        print("sending request from " + src + " to " + dst, flush=True)
+        result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
         # print(result, flush=True)
         result = result.json()
         if dependency == "none": # overwrite previous results with new ones
@@ -184,38 +198,6 @@ def process():
     result = {'display', tmpData['display']}
 
     return jsonify(display=tmpData['display']) 
-    # OLD CODE:
-    # # Image sent as part of request from client
-    # img = request.files['file']
-    # img_as_np_array = np.frombuffer(img.read(), np.uint8)
-    # image_bytes = image_as_np_array.tobytes()
-    # image_base64 = base64.b64encode(image_bytes)
-
-    # # Send image to license plate recognizer
-    # plateObj = {'img': image_base64}
-    # plateNumber = requests.post('http://plate-recognizer:8081/plate', data=plateObj).json()['plate']
-
-    # # Send image to vtype recognizer
-    # # TODO: update img file name
-    # files={'file': image_bytes}
-    # vtype = requests.post('http://vtype-recognizer:5000/image-file',files=files).json()['type']
-
-
-    # # Add vehicle to DB
-    # now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    # vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': plateNumber}
-    # parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
-    # snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
-
-
-    # # Get output display
-    # chart_display = requests.post('http://display-creator:5000', json=snapshot).text
-
-
-    # # Return output display to client
-    # message = now + ": " + vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
-    # return message + chart_display
-    #return(True)
 
 
 

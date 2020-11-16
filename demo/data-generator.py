@@ -7,53 +7,52 @@ import math
 import base64
 import argparse
 
-# Specifications for data flows
 DATA_FLOW_ENTER = [
-            {
-                "src":"source",
-                "dst":"vtype-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"vtype-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
+        {
+            "src":"source",
+            "dst":"vtype-recognizer",
+            "dependency":"split"
+        },
+        {
+            "src":"source",
+            "dst":"plate-recognizer",
+            "dependency":"split"
+        },
+        {
+            "src":"plate-recognizer",
+            "dst":"web-service",
+            "dependency":"combine"
+        },
+        {
+            "src":"vtype-recognizer",
+            "dst":"web-service",
+            "dependency":"combine"
+        },
+        {
+            "src":"web-service",
+            "dst":"display-creator",
+            "dependency":"none"
+        }
+    ]
+
 
 DATA_FLOW_EXIT = [
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"none"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
-
+        {
+            "src":"source",
+            "dst":"plate-recognizer",
+            "dependency":"none"
+        },
+        {
+            "src":"plate-recognizer",
+            "dst":"web-service",
+            "dependency":"combine"
+        },
+        {
+            "src":"web-service",
+            "dst":"display-creator",
+            "dependency":"none"
+        }
+    ]
 
 def sim_inter_event_time(l):
     """The inter-event time for a Poisson process is modeled with an
