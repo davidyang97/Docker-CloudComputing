@@ -13,12 +13,42 @@ parser.add_argument('--url', help='The base URL of the workflow manager',
 # Parse arguments
 args = parser.parse_args()
 
+NUM_REPLICAS = 3
 
 # Create services list according to desired workflow
 if args.behavior == 'enter':
-    services = ['cassandra', 'plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']
+    # services = ['cassandra', 'plate-recognizer', 'vtype-recognizer', 'web-service', 'display-creator']
+    services = [{
+        'name': 'cassandra',
+        'replicas': NUM_REPLICAS
+    },{
+        'name': 'plate-recognizer',
+        'replicas': NUM_REPLICAS
+    },{
+        'name': 'vtype-recognizer',
+        'replicas': NUM_REPLICAS
+    },{
+        'name': 'web-service',
+        'replicas': NUM_REPLICAS,
+    },{
+        'name': 'display-creator',
+        'replicas': NUM_REPLICAS
+    }]
 else:
-    services = ['cassandra', 'plate-recognizer', 'web-service', 'display-creator']
+    # services = ['cassandra', 'plate-recognizer', 'web-service', 'display-creator']
+    services = [{
+        'name': 'cassandra',
+        'replicas': NUM_REPLICAS,
+    },{
+        'name': 'plate-recognizer',
+        'replicas': NUM_REPLICAS,
+    },{
+        'name': 'web-service',
+        'replicas': NUM_REPLICAS,
+    },{
+        'name': 'display-creator',
+        'replicas': NUM_REPLICAS,
+    }]
 
 
 # Append '/start' to the url

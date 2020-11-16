@@ -5,6 +5,7 @@ import requests
 from time import sleep
 import time
 from datetime import datetime
+from docker.types import ServiceMode
 
 SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.4', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
@@ -14,7 +15,7 @@ SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.4', 'port
 
 DB_REPLICAS = 3 # Number of replicas of Cassandra
 
-NUM_REPLICAS = 1  # Number of replicas to deploy of the services
+NUM_REPLICAS = 3  # Number of replicas to deploy of the services
 
 SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
@@ -63,8 +64,11 @@ def start():
     '''
     start_time = time.perf_counter()
     # Start requested services (if necessary) and scale them
-    for service_name in request.json['services']:
+    for service in request.json['services']:
+        service_name = service['name']
+        replicas = service['replicas']
         image_name = SERVICE_PARAMS[service_name]['image']
+        service_mode = ServiceMode('replicated', replicas)
 
         if service_name == 'cassandra':
             if SEED_NAME not in existing_services:
@@ -78,7 +82,7 @@ def start():
                 print(SEED_NAME + " created", flush=True)
 
                 # Create the rest of the nodes and let them point to the seed node
-                for i in range(1, DB_REPLICAS):
+                for i in range(1, replicas):
                     j = ( i % 3 ) + 1
 
                     DB_name = 'cassandra-00' + str(j)
@@ -98,10 +102,10 @@ def start():
                 service = client.services.get(existing_services[service_name])
             else:
                 service = client.services.create(image_name, name=service_name,
-                    networks=['parking-lot-net'])
+                    networks=['parking-lot-net'], mode=service_mode)
             # service.reload()
             # service.scale(NUM_REPLICAS)
-            print(service_name + " " + image_name + " created", flush=True)
+            # print(service_name + " " + image_name + " created", flush=True)
     # end_time = time.perf_counter()
     # print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
 
