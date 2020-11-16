@@ -122,8 +122,12 @@ def start():
             for service in request.json['services']:
                 service_name = service['name']
                 if service_name != 'cassandra':
-                    print("attempting to check " + service_name, flush=True)
                     port = SERVICE_PARAMS[service_name]['port']
+
+                    if not request.json['reuse']: # Append lot id if non-reuse case
+                        service_name = service_name + str(request.json['parking_lot_id'])
+                        
+                    print("attempting to check " + service_name, flush=True)
                     url = 'http://' + service_name + ':' + port + '/is-alive'
                     if not requests.get(url).json()['alive']:
                         ready = False
@@ -165,10 +169,10 @@ def process():
     for flow in input['data_flow']:
         src = flow['src']
         dst = flow['dst']
-        
+
         if not request.json['reuse']: # Append lot id if reuse not desired
-            src = src + request.json['parking_lot_id']
-            dst = dst + request.json['parking_lot_id']
+            src = src + str(request.json['parking_lot_id'])
+            dst = dst + str(request.json['parking_lot_id'])
 
         inputData = tmpData
         if src == "source":
