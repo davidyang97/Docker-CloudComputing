@@ -21,6 +21,10 @@ SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
 SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
 
+# Global dict mapping lot id to reuse flag (could expand this to include entire data flow)
+lot_map = {}
+
+
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
 
@@ -49,18 +53,13 @@ def start():
     # Get a dictionary of services currently running on the swarm
     existing_services = {service.name:service.id for service in client.services.list()}
 
-    '''
-    # TEMPORARY SOLUTION: Cassandra is standalone container on manager node
-    # Keep this solution in place until we solve shared volume problem
-    try:
-        parking_lot_db = client.containers.get('parking-lot-db')
-        parking_lot_db.start()
-    except:
-        mount = docker.types.Mount('/var/lib/cassandra', 'parking-lot')
-        parking_lot_db = client.containers.run('cassandra:latest', name='parking-lot-db', 
-            detach=True, network='parking-lot-net', mounts=[mount])
-    print("created parking-lot-db\n", flush=True)
-    '''
+    # Store information for this client's workflow
+    lot_id = request.json['parking_lot_id']
+    lot_map[lot_id] = {}
+    lot_map[lot_id]['reuse'] = request.json['reuse']
+    # Could add data flow spec e.g. lot_map[lot_id]['data_flow'] = request.json['data_flow']
+
+
     start_time = time.perf_counter()
     # Start requested services (if necessary) and scale them
     for service in request.json['services']:
@@ -161,6 +160,7 @@ def process():
 
     # input
     input = request.json
+    lot_id = request.json['data']['parking_lot_id']
     # print("request.json", flush=True)
     # print(input, flush=True)
     tmpData = ""
@@ -174,10 +174,11 @@ def process():
         if src == "source":
             inputData = input['data']
 
-        if not request.json['reuse']: # Append lot id if reuse not desired
+
+        if not lot_map[lot_id]['reuse']: # Append lot id if client's config is non-reuse
             if src != "source":
-                src = src + str(request.json['data']['parking_lot_id'])
-            dst = dst + str(request.json['data']['parking_lot_id'])
+                src = src + str(lot_id)
+            dst = dst + str(lot_id)
 
 
         print("sending request from " + src + " to " + dst, flush=True)
