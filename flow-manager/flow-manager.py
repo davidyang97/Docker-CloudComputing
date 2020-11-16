@@ -105,9 +105,9 @@ def start():
                     networks=['parking-lot-net'], mode=service_mode)
             # service.reload()
             # service.scale(NUM_REPLICAS)
-            # print(service_name + " " + image_name + " created", flush=True)
-    # end_time = time.perf_counter()
-    # print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
+            print(service_name + " " + image_name + " created", flush=True)
+    end_time = time.perf_counter()
+    print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
 
 
     # Confirm that all services are ready before returning success method to client
@@ -118,7 +118,8 @@ def start():
         ready = True
 
         try:
-            for service_name in request.json['services']:
+            for service in request.json['services']:
+                service_name = service['name']
                 if service_name != 'cassandra':
                     print("attempting to check " + service_name, flush=True)
                     port = SERVICE_PARAMS[service_name]['port']
