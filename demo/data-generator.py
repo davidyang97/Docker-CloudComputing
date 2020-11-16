@@ -84,7 +84,9 @@ parser.add_argument('--url', help='The base URL of the workflow manager',
                     default='http://cluster3-1.utdallas.edu')
 parser.add_argument('--lambda', help='The Poisson rate parameter (avg vehicles per sec)', 
                     type=float, default=0.5, dest='lambd')
-
+parser.add_argument('--reuse', dest='reuse', action='store_true')
+parser.add_argument('--no-reuse', dest='reuse', action='store_false')
+parser.set_defaults(reuse=True)
 
 # Parse arguments
 args = parser.parse_args()
@@ -117,6 +119,7 @@ for filename in os.listdir(directory):
         # Create Data
         data = {"db_behavior": db_behavior,
                 "parking_lot_id": args.lot,
+                "reuse": args.reuse,
                 "timestamp": now}
         print("Filename: " + filename)
         with open(directory + filename, "rb") as img_file:

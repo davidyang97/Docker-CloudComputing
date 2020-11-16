@@ -6,14 +6,18 @@ import time
 parser = argparse.ArgumentParser(description='Generate data for a parking lot')
 parser.add_argument('behavior', help='The workflow to request',
                     choices=['enter','exit'])
+parser.add_argument('--lot', help='The parking lot id', default=1, type=int)
 parser.add_argument('--url', help='The base URL of the workflow manager', 
                     default='http://cluster3-1.utdallas.edu')
-
+parser.add_argument('--replicas', help='Number of replicas for each service', default=2, type=int)
+parser.add_argument('--reuse', dest='reuse', action='store_true')
+parser.add_argument('--no-reuse', dest='reuse', action='store_false')
+parser.set_defaults(reuse=True)
 
 # Parse arguments
 args = parser.parse_args()
 
-NUM_REPLICAS = 3
+NUM_REPLICAS = args.replicas
 
 # Create services list according to desired workflow
 if args.behavior == 'enter':
@@ -58,7 +62,9 @@ else:
     url = args.url + '/start'
 
 
-data = {'services': services}
+data = {'services': services,
+        'reuse': args.reuse,
+        'parking_lot_id': args.lot}
 
 
 # start requested workflow

@@ -49,7 +49,6 @@ def start():
     # Get a dictionary of services currently running on the swarm
     existing_services = {service.name:service.id for service in client.services.list()}
 
-
     '''
     # TEMPORARY SOLUTION: Cassandra is standalone container on manager node
     # Keep this solution in place until we solve shared volume problem
@@ -97,14 +96,16 @@ def start():
 
                     print(DB_name + " created", flush=True)
         else: 
+            if not request.json['reuse']: # Append lot ID if reuse is not desired
+                service_name = service_name + str(request.json['parking_lot_id'])
+
             print(service_name + " " + image_name + " creating", flush=True)
             if service_name in existing_services:
                 service = client.services.get(existing_services[service_name])
             else:
                 service = client.services.create(image_name, name=service_name,
                     networks=['parking-lot-net'], mode=service_mode)
-            # service.reload()
-            # service.scale(NUM_REPLICAS)
+
             print(service_name + " " + image_name + " created", flush=True)
     end_time = time.perf_counter()
     print('Services deployment finished in ' + str(end_time - start_time) + ' sec', flush=True)
@@ -164,12 +165,16 @@ def process():
     for flow in input['data_flow']:
         src = flow['src']
         dst = flow['dst']
+        
+        if not request.json['reuse']: # Append lot id if reuse not desired
+            src = src + request.json['parking_lot_id']
+            dst = dst + request.json['parking_lot_id']
 
         inputData = tmpData
         if src == "source":
             inputData = input['data']
-        print("sending request from " + flow['src'] + " to " + flow['dst'], flush=True)
-        result = requests.post('http://' + flow['dst'] + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+        print("sending request from " + src + " to " + dst, flush=True)
+        result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
         # print(result, flush=True)
         result = result.json()
         if dependency == "none": # overwrite previous results with new ones
@@ -184,38 +189,6 @@ def process():
     result = {'display', tmpData['display']}
 
     return jsonify(display=tmpData['display']) 
-    # OLD CODE:
-    # # Image sent as part of request from client
-    # img = request.files['file']
-    # img_as_np_array = np.frombuffer(img.read(), np.uint8)
-    # image_bytes = image_as_np_array.tobytes()
-    # image_base64 = base64.b64encode(image_bytes)
-
-    # # Send image to license plate recognizer
-    # plateObj = {'img': image_base64}
-    # plateNumber = requests.post('http://plate-recognizer:8081/plate', data=plateObj).json()['plate']
-
-    # # Send image to vtype recognizer
-    # # TODO: update img file name
-    # files={'file': image_bytes}
-    # vtype = requests.post('http://vtype-recognizer:5000/image-file',files=files).json()['type']
-
-
-    # # Add vehicle to DB
-    # now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    # vehicleInfo = {'timestamp': now, 'vehicletype': vtype, 'licensenumber': plateNumber}
-    # parkingSlotType = requests.post('http://web-service:8090/parkingInfo', vehicleInfo).json()['parkingslottype'] 
-    # snapshot = requests.get('http://web-service:8090/parkingInfo').json() # return an array
-
-
-    # # Get output display
-    # chart_display = requests.post('http://display-creator:5000', json=snapshot).text
-
-
-    # # Return output display to client
-    # message = now + ": " + vtype + " with license plate " + plateNumber + " has been assigned to " + parkingSlotType + "\n"
-    # return message + chart_display
-    #return(True)
 
 
 
