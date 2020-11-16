@@ -64,7 +64,6 @@ else:
 
 
 data = {'services': services,
-        'data_flow': data_flow,
         'reuse': args.reuse,
         'parking_lot_id': args.lot}
 
