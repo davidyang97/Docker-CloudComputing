@@ -156,11 +156,13 @@ def stop_all():
 @app.route('/process', methods=['POST'])
 def process():
 
-    # TODO: everything
+    lot_id = request.json['data']['parking_lot_id'] 
+    if lot_id not in lot_map:
+        return "Client has not yet requested a workflow"
 
     # input
     input = request.json
-    lot_id = request.json['data']['parking_lot_id']
+    
     # print("request.json", flush=True)
     # print(input, flush=True)
     tmpData = ""
