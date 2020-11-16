@@ -170,13 +170,16 @@ def process():
         src = flow['src']
         dst = flow['dst']
 
-        if not request.json['reuse']: # Append lot id if reuse not desired
-            src = src + str(request.json['data']['parking_lot_id'])
-            dst = dst + str(request.json['data']['parking_lot_id'])
-
         inputData = tmpData
         if src == "source":
             inputData = input['data']
+
+        if not request.json['reuse']: # Append lot id if reuse not desired
+            if src != "source":
+                src = src + str(request.json['data']['parking_lot_id'])
+            dst = dst + str(request.json['data']['parking_lot_id'])
+
+
         print("sending request from " + src + " to " + dst, flush=True)
         result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
         # print(result, flush=True)
