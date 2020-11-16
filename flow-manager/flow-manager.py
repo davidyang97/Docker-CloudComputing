@@ -126,7 +126,7 @@ def start():
 
                     if not request.json['reuse']: # Append lot id if non-reuse case
                         service_name = service_name + str(request.json['parking_lot_id'])
-                        
+
                     print("attempting to check " + service_name, flush=True)
                     url = 'http://' + service_name + ':' + port + '/is-alive'
                     if not requests.get(url).json()['alive']:
@@ -171,8 +171,8 @@ def process():
         dst = flow['dst']
 
         if not request.json['reuse']: # Append lot id if reuse not desired
-            src = src + str(request.json['parking_lot_id'])
-            dst = dst + str(request.json['parking_lot_id'])
+            src = src + str(request.json['data']['parking_lot_id'])
+            dst = dst + str(request.json['data']['parking_lot_id'])
 
         inputData = tmpData
         if src == "source":

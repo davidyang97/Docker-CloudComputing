@@ -119,7 +119,6 @@ for filename in os.listdir(directory):
         # Create Data
         data = {"db_behavior": db_behavior,
                 "parking_lot_id": args.lot,
-                "reuse": args.reuse,
                 "timestamp": now}
         print("Filename: " + filename)
         with open(directory + filename, "rb") as img_file:
@@ -127,7 +126,8 @@ for filename in os.listdir(directory):
         data['img'] = img_base64.decode('utf-8')
 
         wf_input = {"data_flow": data_flow,
-                    "data": data}
+                    "data": data,
+                    "reuse": args.reuse}
 
         # Send request and time it
         print('\nDetected vehicle...')
