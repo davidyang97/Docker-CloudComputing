@@ -38,34 +38,6 @@ if args.behavior == 'enter':
         'name': 'display-creator',
         'replicas': NUM_REPLICAS
     }]
-
-    data_flow = [
-            {
-                "src":"source",
-                "dst":"vtype-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"split"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"vtype-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
 else:
     # services = ['cassandra', 'plate-recognizer', 'web-service', 'display-creator']
     services = [{
@@ -82,23 +54,6 @@ else:
         'replicas': NUM_REPLICAS,
     }]
 
-    data_flow = [
-            {
-                "src":"source",
-                "dst":"plate-recognizer",
-                "dependency":"none"
-            },
-            {
-                "src":"plate-recognizer",
-                "dst":"web-service",
-                "dependency":"combine"
-            },
-            {
-                "src":"web-service",
-                "dst":"display-creator",
-                "dependency":"none"
-            }
-        ]
 
 
 # Append '/start' to the url

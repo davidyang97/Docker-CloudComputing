@@ -21,7 +21,7 @@ SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
 SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
 
-# Global dict mapping lot id to reuse flag (could expand this to include entire data flow)
+# Global dict mapping lot id to reuse flag
 lot_map = {}
 
 
@@ -53,12 +53,11 @@ def start():
     # Get a dictionary of services currently running on the swarm
     existing_services = {service.name:service.id for service in client.services.list()}
 
-    # Store information for this client's workflow
+    # Store reuse flag for this client's workflow
     lot_id = request.json['parking_lot_id']
     lot_map[lot_id] = {}
     lot_map[lot_id]['reuse'] = request.json['reuse']
-    lot_map[lot_id]['data_flow'] = request.json['data_flow']
-
+    # Can store additional client-related data in this dict
 
     start_time = time.perf_counter()
     # Start requested services (if necessary) and scale them
@@ -168,7 +167,7 @@ def process():
     tmpData = ""
     dependency = "none"
     # parse the order of components
-    for flow in lot_map[lot_id]['data_flow']:
+    for flow in request.json['data_flow']:
         src = flow['src']
         dst = flow['dst']
 
