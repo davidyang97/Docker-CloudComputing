@@ -112,7 +112,7 @@ directory = './photos/'
 for filename in os.listdir(directory):
     if filename.endswith(".jpg"):
         # create timestamp
-        now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Create Data
         data = {"db_behavior": db_behavior,
                 "parking_lot_id": args.lot,
