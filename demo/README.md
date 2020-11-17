@@ -7,7 +7,7 @@ This script sends a workflow request to the workflow manager. It has the followi
 - `enter` or `exit` (required): Determines which workflow to request (entering vehicles or exiting vehicles)
 - `--url` (optional): The base url to send the request to. Defaults to http://cluster3-1.utdallas.edu if not provided
 
-Example usage: `python wf-request.py enter --url http://localhot:5000`
+Example usage: `python wf-request.py enter --lot 3 --replicas 3 --no-reuse --url http://localhot:5000`
 
 <br>
 
