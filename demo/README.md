@@ -6,6 +6,9 @@ This script sends a workflow request to the workflow manager. It has the followi
 
 - `enter` or `exit` (required): Determines which workflow to request (entering vehicles or exiting vehicles)
 - `--url` (optional): The base url to send the request to. Defaults to http://cluster3-1.utdallas.edu if not provided
+- `--lot` (optional): The parking lot id. Defaults to 1 if not provided.
+- `--reuse` or `--no-reuse` (optional): Indicates whether to request a shared / reusable workflow or a dedicated workflow. Defaults to `--reuse` if not provided.
+- `--replicas` (optional): The desired number of replicas for each component
 
 Example usage: `python wf-request.py enter --lot 3 --replicas 3 --no-reuse --url http://localhot:5000`
 
