@@ -63,7 +63,7 @@ def process():
 
     output += '\n'
 
-    if 'snapshot' in request.json:
+    if 'snapshot' in request.json and len(request.json['snapshot'] > 0):
         slot_type_counts = {}
         for vehicle in request.json['snapshot']:
             if vehicle['parkingslottype'] in slot_type_counts:

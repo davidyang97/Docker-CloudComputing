@@ -13,10 +13,6 @@ SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.4', 'port
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.1', 'port': '5000'},
                  'cassandra': {'image': 'cassandra:latest'}}
 
-DB_REPLICAS = 3 # Number of replicas of Cassandra
-
-NUM_REPLICAS = 3  # Number of replicas to deploy of the services
-
 SLEEP_TIME = 10 # Sleep time when waiting for services deployment
 
 SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
@@ -24,6 +20,7 @@ SEED_NAME = 'cassandra-001' # Seed name of Cassandra cluster
 # Global dict mapping lot id to reuse flag
 lot_map = {}
 
+# Record current replicas 
 
 # Connect to docker daemon on host machine (requires volume mount)
 client = docker.from_env()
@@ -73,8 +70,7 @@ def start():
                 print(SEED_NAME + " creating", flush=True)
 
                 service = client.services.create(image_name, name=SEED_NAME,
-                    env=['CASSANDRA_BROADCAST_ADDRESS=' + SEED_NAME], networks=['parking-lot-net'],
-                    constraints=['node.hostname==cluster3-1.utdallas.edu'])
+                    env=['CASSANDRA_BROADCAST_ADDRESS=' + SEED_NAME], networks=['parking-lot-net'])
 
                 print(SEED_NAME + " created", flush=True)
 
@@ -82,15 +78,13 @@ def start():
                 for i in range(1, replicas):
                     j = ( i % 3 ) + 1
 
-                    DB_name = 'cassandra-00' + str(j)
+                    DB_name = 'cassandra-' + str(j)
                     DB_env = 'CASSANDRA_BROADCAST_ADDRESS=' + DB_name
-                    DB_constraint = 'node.hostname==cluster3-' + str(j) + '.utdallas.edu'
 
                     print(DB_name + " creating", flush=True)
 
                     service = client.services.create(image_name, name=DB_name,
-                        env=[DB_env, 'CASSANDRA_SEEDS=' + SEED_NAME], networks=['parking-lot-net'],
-                        constraints=[DB_constraint])
+                        env=[DB_env, 'CASSANDRA_SEEDS=' + SEED_NAME], networks=['parking-lot-net'])
 
                     print(DB_name + " created", flush=True)
         else: 
@@ -164,12 +158,12 @@ def process():
     
     # print("request.json", flush=True)
     # print(input, flush=True)
-    tmpData = ""
-    dependency = "none"
+    tmpData = {}
     # parse the order of components
     for flow in request.json['data_flow']:
         src = flow['src']
         dst = flow['dst']
+        dependency = flow["dependency"]
 
         inputData = tmpData
         if src == "source":
@@ -181,19 +175,24 @@ def process():
                 src = src + str(lot_id)
             dst = dst + str(lot_id)
 
+        if dependency != "together" or (dependency == "together" and stat == "end"):
+            print("sending request from " + src + " to " + dst, flush=True)
+            result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+            # print(result, flush=True)
+            result = result.json()
 
-        print("sending request from " + src + " to " + dst, flush=True)
-        result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
-        # print(result, flush=True)
-        result = result.json()
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result
-        elif dependency == "split": # update previous results with new ones
-            tmpData.update(result)
-        else: # ignore multiple combines
-            if flow['dependency'] != "combine": # update results from component after last combine
-                tmpData = result
-        dependency = flow['dependency']
+        else:
+            stat = flow["stat"]
+            if dependency == "combine":
+                if stat != "start":
+                    tmpData.update(result)
+                else:
+                    tmpData = result
+            elif dependency == "together": 
+                if stat == "end": 
+                    tmpData = result
     
     result = {'display', tmpData['display']}
 

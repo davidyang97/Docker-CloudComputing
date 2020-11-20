@@ -7,26 +7,43 @@ import math
 import base64
 import argparse
 
+'''
+    dependency:
+        combine: response data should be combined
+        together: only send one request since all the needed data are combined
+
+        1->2->3->4
+        |        |
+        ->5-> 6 ->
+
+        the response of 2->3 and 5->6 should be combined
+        only send one request for 3->4 and 6->4
+'''
+
 DATA_FLOW_ENTER = [
         {
             "src":"source",
             "dst":"vtype-recognizer",
-            "dependency":"split"
+            "dependency":"combine",
+            "stat": "start"
         },
         {
             "src":"source",
             "dst":"plate-recognizer",
-            "dependency":"split"
+            "dependency":"combine",
+            "stat": "end"
         },
         {
             "src":"plate-recognizer",
             "dst":"web-service",
-            "dependency":"combine"
+            "dependency":"together",
+            "stat": "start"
         },
         {
             "src":"vtype-recognizer",
             "dst":"web-service",
-            "dependency":"combine"
+            "dependency":"together",
+            "stat": "end"
         },
         {
             "src":"web-service",
@@ -45,7 +62,7 @@ DATA_FLOW_EXIT = [
         {
             "src":"plate-recognizer",
             "dst":"web-service",
-            "dependency":"combine"
+            "dependency":"none"
         },
         {
             "src":"web-service",
