@@ -7,7 +7,9 @@ Nodejs Web Service
 - API document see https://davidyang97.stoplight.io/docs/dockercloudcomputing/reference/ParkingLot.v1.yaml
 
 - Finished API:
-	- [GET, POST, DELETE] /parkingInfo
+	- [POST] /process
+	- [POST] /setPrice
+	- [GET] /is-alive
 ***
 ## Guidance
 - Run cassandra container
