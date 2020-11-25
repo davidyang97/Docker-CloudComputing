@@ -61,6 +61,9 @@ def process():
     if 'parking_lot_id' in request.json:
         output += str(request.json['parking_lot_id'])
 
+    if 'parkingfee' in request.json:
+        output += '\n parking fee is ' + str(request.json['parkingfee'])
+
     output += '\n'
 
     if 'snapshot' in request.json and len(request.json['snapshot']) > 0:
