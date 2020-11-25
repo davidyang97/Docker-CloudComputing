@@ -73,6 +73,14 @@ app.delete("/clr", async function(req, res) {
 
 })
 
+// set parking fee per hour
+app.post("/setPrice", function(req, res) {
+  if(req.query.price != null) {
+    price = req.query.price;
+  }
+  res.status(200).send("OK");
+})
+
 // send alive msg to workflow manager
 app.get("/is-alive", function(req, res){
   let resObj = {'alive': running};
