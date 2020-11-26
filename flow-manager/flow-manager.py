@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from docker.types import ServiceMode
 
-SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.5', 'port': '8090'},
+SERVICE_PARAMS = {'web-service': {'image': 'davidyang97/web-service:v2.6', 'port': '8090'},
                  'plate-recognizer': {'image': 'sethbedford/alpr:v1.2', 'port': '8081'},
                  'vtype-recognizer': {'image': 'emwoj/detectron2:latest', 'port': '5000'},
                  'display-creator': {'image': 'alexneal/parkinglot-display:v2.2', 'port': '5000'},
