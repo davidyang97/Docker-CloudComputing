@@ -29,7 +29,7 @@ paramMapping['licensenumber'] = 'plate';
 paramMapping['vehicletype'] = 'vtype';
 paramMapping['timestamp'] = 'timestamp';
 
-var price = 2;
+var price = 50;
 
 var running = false;
 
