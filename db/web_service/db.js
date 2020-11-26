@@ -162,17 +162,7 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
 
   await createTable(parkingLog_name, parkingInfo_name);
 
-  // select the start time and the vehicle type
-  const selectQuery = "select * from " + parkingLog_name + " where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
-  let selectParam = [licensenumber];
-  const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
-  if(enableLog >= 1)console.log('Result: ', selectResult.rows);
-
-  if(!selectResult.rows || selectResult.rows.length == 0) {
-    console.log("Query failed!");
-    throw new Error("Query failed!");
-  }
-
+  // check if the vehicle exiting the parking lot is in the snapshot
   const snapshot = await getObj(parking_lot_id);
   if(!snapshot.rows || snapshot.rows.length == 0) {
     console.log("Query failed!");
@@ -186,9 +176,22 @@ async function deleteObj(licensenumber, timestamp, parking_lot_id) {
   });
 
   if(!found) {
-    console.log("Missing license number!");
-    throw new Error("Missing license number!");
+    console.log("Missing vehicle in the snapshot!");
+    throw new Error("Missing vehicle in the snapshot!");
   }
+
+  // select the start time and the vehicle type
+  const selectQuery = "select * from " + parkingLog_name + " where licenseNumber = ? and enterOrExit = 0 order by enterOrExitTime desc limit 1 allow filtering";
+  let selectParam = [licensenumber];
+  const selectResult = await client.execute(selectQuery, selectParam, { prepare: true });
+  if(enableLog >= 1)console.log('Result: ', selectResult.rows);
+
+  if(!selectResult.rows || selectResult.rows.length == 0) {
+    console.log("Query failed!");
+    throw new Error("Query failed!");
+  }
+
+  
 
   // calculate the start time and end time of the parking
   let startTime = Date.parse(selectResult.rows[0].enterorexittime);
