@@ -7,8 +7,8 @@ def barchart(data):
 
     
     max_length = max([len(key) for key in data.keys()])
-    max_length = min(max_length, 50)
-    value_characters = 80 - max_length
+    max_length = min(max_length, 30)
+    value_characters = 50 - max_length
     max_value = max(data.values())
     scale = int(math.ceil(float(max_value) / value_characters))
     scale = max(1, scale)

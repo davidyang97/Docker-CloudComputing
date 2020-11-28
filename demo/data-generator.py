@@ -125,8 +125,10 @@ else:
 elapsed_times = []
 
 # Data generation
-directory = './photos/'
-for filename in os.listdir(directory):
+directory = './lot' + str(args.lot) + '/'
+files = os.listdir(directory)
+random.shuffle(files)
+for filename in files:
     if filename.endswith(".jpg"):
         # create timestamp
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
