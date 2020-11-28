@@ -4,6 +4,10 @@
 ```
 docker run -v /var/run/docker.sock:/var/run/docker.sock -p 80:5000 --name flow-manager -d davidyang97/flow-manager:v1.8
 ```
+- clean all the existing services (run in browser)
+```
+http://cluster3-1.utdallas.edu/stop-all
+```
 - workflow request
 ```
 python wf-request.py enter --lot 3 --replicas 3 --no-reuse
