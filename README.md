@@ -1,8 +1,16 @@
 # CS6343 Cloud Computing Project
 
+- (optional) stop and remove the existing flow-manager container
+```
+docker rm -f flow-manager
+```
 - workflow manager deployment
 ```
 docker run -v /var/run/docker.sock:/var/run/docker.sock -p 80:5000 --name flow-manager -d davidyang97/flow-manager:v1.8
+```
+- (optional) attach the terminal to flow-manager
+```
+docker attach flow-manager
 ```
 - clean all the existing services (run in browser)
 ```
