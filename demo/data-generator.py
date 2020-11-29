@@ -157,6 +157,9 @@ for filename in files:
             print('Workflow returned an error: ')
             print(response.text)
 
+        if 'timeData' in response.json():
+            print(json.dumps(response.json()['timeData'], indent=4, sort_keys=True))
+
         # Print and save processing time
         elapsed_time = finish_time - start_time
         elapsed_times.append(elapsed_time)

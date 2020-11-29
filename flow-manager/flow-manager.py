@@ -159,8 +159,10 @@ def process():
     # print("request.json", flush=True)
     # print(input, flush=True)
     tmpData = {}
+    timedata = []
     # parse the order of components
     for flow in request.json['data_flow']:
+        timeObj = {}
         src = flow['src']
         dst = flow['dst']
         dependency = flow["dependency"]
@@ -177,9 +179,17 @@ def process():
 
         if dependency != "together" or (dependency == "together" and stat == "end"):
             print("sending request from " + src + " to " + dst, flush=True)
+            timeObj['src'] = src
+            timeObj['dst'] = dst
+            wfSending = time.perf_counter()
             result = requests.post('http://' + dst + ':' + SERVICE_PARAMS[flow['dst']]['port'] + '/process', json=inputData)
+            wfReceiving = time.perf_counter()
+            timeObj['time'] = wfReceiving - wfSending
+            timedata.append(timeObj)
             # print(result, flush=True)
             result = result.json()
+            
+
 
         if dependency == "none": # overwrite previous results with new ones
             tmpData = result
@@ -196,7 +206,7 @@ def process():
     
     result = {'display', tmpData['display']}
 
-    return jsonify(display=tmpData['display']) 
+    return jsonify(display=tmpData['display'], timeData = timedata)
 
 
 
