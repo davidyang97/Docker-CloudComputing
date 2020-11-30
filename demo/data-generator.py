@@ -6,6 +6,7 @@ import random
 import math
 import base64
 import argparse
+import json
 
 '''
     dependency:
@@ -124,6 +125,9 @@ else:
 
 elapsed_times = []
 
+timeData = {}
+timeSum = {}
+
 # Data generation
 directory = './lot' + str(args.lot) + '/'
 files = os.listdir(directory)
@@ -158,7 +162,14 @@ for filename in files:
             print(response.text)
 
         if 'timeData' in response.json():
-            print(json.dumps(response.json()['timeData'], indent=4, sort_keys=True))
+            for element in response.json()['timeData']:
+                name = element['src'] + ' to ' + element['dst']
+                if name in timeData:
+                    timeData[name].append(element['time'])
+                    timeSum[name] += element['time']
+                else:
+                    timeData[name] = [element['time']]
+                    timeSum[name] = element['time']
 
         # Print and save processing time
         elapsed_time = finish_time - start_time
@@ -174,3 +185,7 @@ for filename in files:
         continue
 
 print('Average time: ', sum(elapsed_times)/len(elapsed_times), 'sec')
+
+for key in timeSum:
+    print(key, ': ', timeSum[key] / len(timeData[key]), 'sec')
+
